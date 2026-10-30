@@ -1,0 +1,13 @@
+# Bases brutas NUNCA entram no repositório (dados são ativo comercial)
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.tsv
+*.parquet
+*.json
+!package.json
+data/
+raw/
+bases/
+private/
