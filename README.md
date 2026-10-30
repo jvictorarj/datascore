@@ -9,12 +9,11 @@ Site estático do projeto **Data Score** — inteligência de dados do futebol b
 - `index.html`, `stats.html`, `renda.html`, `clube.html`, `sobre.html`, `contato.html`, `metodologia.html` — páginas do site
 - `assets/style.css`, `assets/app.js` — estilo, classificação e gráficos (SVG, sem dependências)
 - `assets/logo.png`, `assets/favicon.png` — identidade visual
-- `assets/data.js` — **apenas agregados** (estado, estádio, clube, rodada), os placares usados na classificação e os rankings Top 10
+- `assets/data.js` — dados da temporada 2025: jogo a jogo (placar, data, estádio, árbitro, público, renda e estatísticas de cada equipe) e agregados por estado, estádio e clube
 
-## O que este repositório NÃO contém
+## Planilhas
 
-As bases completas (jogos, dados de desempenho, público e renda) **não são públicas** e não devem ser versionadas aqui.
-O `.gitignore` bloqueia `.xlsx`, `.csv`, `.json` e pastas de dados. Antes de cada `git push`, confira com `git status` e `git diff --cached --stat`.
+As planilhas originais (`.xlsx`) não são versionadas aqui; o `.gitignore` bloqueia `.xlsx`, `.csv` e `.json`.
 
 ## Publicação (GitHub Pages)
 
@@ -22,4 +21,4 @@ Settings → Pages → *Deploy from a branch* → `main` / `(root)`.
 
 ## Atualizando os números
 
-`assets/data.js` é gerado a partir das bases privadas por um script que fica **fora** deste repositório.
+`assets/data.js` é gerado a partir das planilhas por um script que fica fora deste repositório.
