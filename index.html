@@ -3,29 +3,37 @@
 <section class="sec" id="classificacao" style="padding:52px 0 40px"><div class="wrap">
 <div class="kicker">Campeonato Brasileiro · Série A 2025</div>
 <h2>Classificação</h2>
-<p class="sub">Tabela completa da temporada. Filtre por turno, rodada e mando de campo para ver como cada recorte muda a disputa.</p>
-<div class="kpis two" aria-live="polite"><div class="kpi"><div class="kl">Melhor ataque</div><div class="kv" id="st-atk">—</div><div class="ks" id="st-atk-s"></div></div><div class="kpi"><div class="kl">Melhor defesa</div><div class="kv" id="st-def">—</div><div class="ks" id="st-def-s"></div></div></div>
+<p class="sub">Tabela completa da temporada. Filtre por rodada, data, turno e mando de campo para ver como cada recorte muda a disputa.</p>
+<div class="top3" aria-live="polite">
+<div><div class="flabel">Melhores ataques</div><ol id="st-atk"></ol></div>
+<div><div class="flabel">Melhores defesas</div><ol id="st-def"></ol></div></div>
 <div class="filters">
-<div class="fgroup"><span class="flabel" id="fl-turno">Turno</span><div class="seg" role="group" aria-labelledby="fl-turno" data-seg="turno"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="1">1º turno</button><button type="button" data-v="2">2º turno</button></div></div>
 <div class="fgroup"><label class="flabel" for="st-rod">Até a rodada</label><select class="sel" id="st-rod"></select></div>
+<div class="fgroup"><label class="flabel" for="st-date">Ou até a data</label><div class="datebox"><input class="sel" type="date" id="st-date"><button type="button" class="lnk" id="st-date-x" hidden>Limpar</button></div></div>
+<div class="fgroup"><span class="flabel" id="fl-turno">Turno</span><div class="seg" role="group" aria-labelledby="fl-turno" data-seg="turno"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="1">1º turno</button><button type="button" data-v="2">2º turno</button></div></div>
 <div class="fgroup"><span class="flabel" id="fl-mando">Mando de campo</span><div class="seg" role="group" aria-labelledby="fl-mando" data-seg="mando"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="casa">Mandante</button><button type="button" data-v="fora">Visitante</button></div></div>
 </div>
-<div class="tbl-box"><div class="tbl-scroll"><table class="st" id="st-table"><caption class="sr">Classificação do Campeonato Brasileiro Série A 2025</caption><thead><tr><th scope="col">Time</th><th scope="col" title="Pontos">P</th><th scope="col" title="Jogos">J</th><th scope="col" title="Vitórias">V</th><th scope="col" title="Empates">E</th><th scope="col" title="Derrotas">D</th><th scope="col" title="Gols pró">GP</th><th scope="col" title="Gols contra">GC</th><th scope="col" title="Saldo de gols">SG</th><th scope="col" title="Aproveitamento">%</th></tr></thead><tbody></tbody></table></div></div>
-<div class="zleg" id="st-zleg"><span><i style="background:var(--green)"></i>G4 · Libertadores</span><span><i style="background:#D2484F"></i>Z4 · rebaixamento</span></div>
-<p class="note">Desempate: pontos, vitórias, saldo de gols e gols pró.</p>
+<div class="tbl-box"><div class="tbl-scroll"><table class="st" id="st-table"><caption class="sr">Classificação do Campeonato Brasileiro Série A 2025</caption><thead><tr><th scope="col">Time</th><th scope="col" title="Pontos">P</th><th scope="col" title="Jogos">J</th><th scope="col" title="Vitórias">V</th><th scope="col" title="Empates">E</th><th scope="col" title="Derrotas">D</th><th scope="col" title="Gols pró">GP</th><th scope="col" title="Gols contra">GC</th><th scope="col" title="Saldo de gols">SG</th><th scope="col" title="Aproveitamento">%</th><th scope="col" title="Últimos 5 jogos, do mais antigo ao mais recente">Últimos 5</th></tr></thead><tbody></tbody></table></div></div>
+<div class="zleg" id="st-zleg"><span><i style="background:var(--green)"></i>G4 · Libertadores</span><span><i style="background:#D2484F"></i>Z4 · rebaixamento</span><span class="fleg"><b class="fd w"></b>vitória<b class="fd e"></b>empate<b class="fd l"></b>derrota</span></div>
+<p class="note">Desempate: pontos, vitórias, saldo de gols e gols pró. Os últimos 5 jogos consideram as rodadas anteriores à escolhida (ou os jogos anteriores à data), sem filtro de turno ou mando.</p>
 </div></section>
 
 <section class="sec alt" id="evolucao" style="padding-top:60px"><div class="wrap">
 <div class="kicker">Rodada a rodada</div>
 <h2>Evolução na tabela</h2>
-<p class="sub">Acompanhe a posição de um time ao longo das 38 rodadas e compare com outro.</p>
-<div class="ccard wide" id="evo" style="margin-top:26px"><div class="tools"><button type="button" data-toggle>Tabela</button></div>
+<p class="sub">Acompanhe a posição de um time ao longo das 38 rodadas, compare com outro e veja quantas rodadas cada clube passou na liderança, no G4 e no Z4.</p>
+<div class="evo-grid" style="margin-top:26px">
+<div class="ccard wide" id="evo"><div class="tools"><button type="button" data-toggle>Tabela</button></div>
 <h3>Posição na classificação após cada rodada</h3><p class="cs" style="min-height:0;margin-bottom:12px">1º lugar no topo. Passe o mouse (ou use as setas ← →) para ver a posição e os pontos em cada rodada.</p>
 <div class="evo-ctl"><label for="evo-a">Time<select class="sel dk" id="evo-a"></select></label><label for="evo-b">Comparar com<select class="sel dk" id="evo-b"></select></label></div>
 <div class="legend" id="evo-leg" aria-live="polite"></div>
 <div class="plot"></div><div class="tbl-wrap" hidden></div>
-<p class="cf">Faixa verde: G4 (posições 1 a 4) · faixa vermelha: Z4 (posições 17 a 20). A posição considera todos os jogos disputados até a rodada.</p></div>
-</div></section>
+<p class="cf">Faixa verde: G4 (posições 1 a 4) · faixa vermelha: Z4 (posições 17 a 20). A posição considera os jogos das rodadas até a escolhida.</p>
+<div class="cmp" id="evo-cmp" hidden></div></div>
+<div class="ccard side" id="faixas"><h3>Rodadas em cada faixa</h3><p class="cs" style="min-height:0;margin-bottom:10px">Em quantas das 38 rodadas o time terminou a rodada na liderança, no G4 ou no Z4. Clique no título para ordenar.</p>
+<div class="tbl-wrap"><table><thead><tr><th>Time</th><th title="Rodadas na liderança (1º lugar)">Líder</th><th title="Rodadas no G4 (1º a 4º), inclui as de líder">G4</th><th title="Rodadas no Z4 (17º a 20º)">Z4</th></tr></thead><tbody></tbody></table></div>
+<p class="cf">G4 inclui as rodadas na liderança.</p></div>
+</div></div></section>
 
 <section class="sec"><div class="wrap split"><div>
 <div class="kicker">O projeto</div>
