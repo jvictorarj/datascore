@@ -867,6 +867,183 @@
     wireSeg(arRoot, 'data-xseg', S, render); render();
   })();
 
+  /* =====================  RESULTADOS E GOLS (stats e clube)  ===================== */
+  function gsum(list) {
+    var o = { j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, z: 0, cs: 0, sc: 0, cc: 0, scn: 0, ccn: 0, both: 0, m: [0, 0, 0, 0, 0], s: [0, 0, 0, 0, 0], bw: 0, bl: 0, bestW: null, bestL: null };
+    list.forEach(function (g) {
+      var r = g.r, gf = r[1], ga = r[2], df = gf - ga; o.j++;
+      if (df > 0) o.v++; else if (df === 0) o.e++; else o.d++;
+      o.gp += gf; o.gc += ga;
+      if (gf === 0 && ga === 0) o.z++;
+      if (ga === 0) o.cs++; if (gf > 0) o.sc++; if (ga > 0) o.cc++;
+      if (gf > 0 && ga === 0) o.scn++; if (ga > 0 && gf === 0) o.ccn++; if (gf > 0 && ga > 0) o.both++;
+      o.m[Math.min(gf, 4)]++; o.s[Math.min(ga, 4)]++;
+      if (df >= 3) o.bw++; if (-df >= 3) o.bl++;
+      if (df > 0 && (!o.bestW || df > o.bestW.r[1] - o.bestW.r[2] || (df === o.bestW.r[1] - o.bestW.r[2] && gf > o.bestW.r[1]))) o.bestW = g;
+      if (df < 0 && (!o.bestL || -df > o.bestL.r[2] - o.bestL.r[1] || (-df === o.bestL.r[2] - o.bestL.r[1] && ga > o.bestL.r[2]))) o.bestL = g;
+    });
+    o.pts = 3 * o.v + o.e; o.ap = o.j ? o.pts / (3 * o.j) : null; o.sg = o.gp - o.gc; return o;
+  }
+  function gamesOf(s, turno, mando) {
+    var rg = trange(turno || 'todos'), out = [];
+    RES[s].forEach(function (r, i) {
+      if (i + 1 < rg[0] || i + 1 > rg[1]) return;
+      if (mando === 'casa' && r[0] !== 1) return; if (mando === 'fora' && r[0] !== 0) return;
+      out.push({ r: r, i: i });
+    });
+    return out;
+  }
+  function scoreTxt(g) { return g ? g.r[1] + ' x ' + g.r[2] + ' · ' + TEAMS[g.r[3]].n + ' (R' + (g.i + 1) + ')' : '—'; }
+
+  var grRoot = document.getElementById('gr');
+  if (grRoot && TEAMS.length) (function () {
+    var S = { turno: 'todos', mando: 'todos', grupo: 'partidas' }, table = grRoot.querySelector('table'), tb = null, rows = [];
+    var NAME = { h: 'Time', s: 1, v: function (r) { return r.n; }, cell: teamCell }, J = { h: 'J', t: 'Jogos', v: function (r) { return r.o.j; } };
+    function cnt(h, t, f) { return { h: h, t: t, v: function (r) { return f(r.o); }, cell: function (td, r) { var n = f(r.o); td.textContent = n; td.title = r.o.j ? F.pct(n / r.o.j * 100) + ' dos jogos' : ''; } }; }
+    var G = {
+      partidas: { def: 2, asc: false, cols: [NAME, J, cnt('0 x 0', 'Partidas que terminaram sem gols', function (o) { return o.z; }),
+        cnt('Sem sofrer', 'Partidas sem sofrer gols (clean sheets)', function (o) { return o.cs; }), cnt('Marcou', 'Partidas em que marcou', function (o) { return o.sc; }), cnt('Sofreu', 'Partidas em que sofreu gol', function (o) { return o.cc; }),
+        cnt('Marcou s/ sofrer', 'Marcou e não sofreu gol', function (o) { return o.scn; }), cnt('Sofreu s/ marcar', 'Sofreu e não marcou', function (o) { return o.ccn; }), cnt('Ambas marcaram', 'Partidas em que os dois times marcaram', function (o) { return o.both; })] },
+      marcou: { def: 2, asc: true, cols: [NAME, J, cnt('0 gols', 'Partidas em que marcou 0 gols', function (o) { return o.m[0]; }), cnt('1 gol', 'Partidas em que marcou 1 gol', function (o) { return o.m[1]; }), cnt('2 gols', 'Partidas em que marcou 2 gols', function (o) { return o.m[2]; }),
+        cnt('3 gols', 'Partidas em que marcou 3 gols', function (o) { return o.m[3]; }), cnt('+ de 3', 'Partidas em que marcou mais de 3 gols', function (o) { return o.m[4]; })] },
+      sofreu: { def: 2, asc: false, cols: [NAME, J, cnt('0 gols', 'Partidas em que sofreu 0 gols', function (o) { return o.s[0]; }), cnt('1 gol', 'Partidas em que sofreu 1 gol', function (o) { return o.s[1]; }), cnt('2 gols', 'Partidas em que sofreu 2 gols', function (o) { return o.s[2]; }),
+        cnt('3 gols', 'Partidas em que sofreu 3 gols', function (o) { return o.s[3]; }), cnt('+ de 3', 'Partidas em que sofreu mais de 3 gols', function (o) { return o.s[4]; })] },
+      goleadas: { def: 2, asc: false, cols: [NAME, J, cnt('Aplicadas', 'Vitórias por 3 ou mais gols de diferença', function (o) { return o.bw; }), cnt('Sofridas', 'Derrotas por 3 ou mais gols de diferença', function (o) { return o.bl; }),
+        { h: 'Saldo', t: 'Goleadas aplicadas menos goleadas sofridas', v: function (r) { return r.o.bw - r.o.bl; }, f: function (v) { return (v > 0 ? '+' : '') + v; } },
+        { h: 'Maior vitória', t: 'Maior vitória (em diferença de gols)', v: function (r) { return r.o.bestW ? r.o.bestW.r[1] - r.o.bestW.r[2] : 0; }, cell: function (td, r) { td.textContent = scoreTxt(r.o.bestW); } },
+        { h: 'Maior derrota', t: 'Maior derrota (em diferença de gols)', v: function (r) { return r.o.bestL ? r.o.bestL.r[2] - r.o.bestL.r[1] : 0; }, cell: function (td, r) { td.textContent = scoreTxt(r.o.bestL); } }] }
+    };
+    function load() { rows = TEAMS.map(function (t) { return { s: t.s, n: t.n, o: gsum(gamesOf(t.s, S.turno, S.mando)) }; }); }
+    function build() { var g = G[S.grupo]; tb = xtable(table, g.cols, g.def, g.asc); tb.set(rows); }
+    wireSeg(grRoot, 'data-xseg', S, function (k) { load(); if (k === 'grupo') build(); else tb.set(rows); });
+    load(); build();
+  })();
+
+  /* =====================  PÁGINA DO CLUBE  ===================== */
+  var clRoot = document.getElementById('club');
+  if (clRoot && TEAMS.length) (function () {
+    var sel = document.getElementById('cl-sel'), BYS = {}; (DS.clubes || []).forEach(function (c) { BYS[c.s] = c; });
+    var NMS = TEAMS.slice().sort(function (x, y) { return x.n.localeCompare(y.n, 'pt'); });
+    NMS.forEach(function (t) { var o = mk('option', null, t.n); o.value = t.s; sel.appendChild(o); });
+    var posCache = {};
+    function posBefore(day) {
+      if (!posCache[day]) { var m = {}; standings(1, 38, 'todos', day - 1).forEach(function (x, i) { m[x.s] = i + 1; }); posCache[day] = m; }
+      return posCache[day];
+    }
+    function sec(title, sub) { var s = mk('section', 'cl-sec'); s.appendChild(mk('h2', null, title)); if (sub) s.appendChild(mk('p', 'cl-sub', sub)); clRoot.appendChild(s); return s; }
+    function cards(parent, list) {
+      var g = mk('div', 'ov-grid'); list.forEach(function (x) { var c = mk('div', 'ovc'); c.appendChild(mk('div', 'kl', x[0])); c.appendChild(mk('div', 'kv', x[1])); if (x[2]) c.appendChild(mk('div', 'ks', x[2])); g.appendChild(c); }); parent.appendChild(g); return g;
+    }
+    function pct(n, d) { return d ? F.pct(n / d * 100) : '—'; }
+    function dual(parent, title, la, lb, A, B) {
+      var box = mk('div', 'mvb'); box.appendChild(mk('div', 'flabel', title));
+      var t = mk('table', 'lt'), th = mk('thead'), trh = mk('tr');
+      ['', la, lb].forEach(function (h) { trh.appendChild(mk('th', null, h)); }); th.appendChild(trh); t.appendChild(th);
+      var tbd = mk('tbody');
+      [['Jogos', 'j'], ['Vitórias', 'v'], ['Empates', 'e'], ['Derrotas', 'd'], ['Pontos', 'pts'], ['Aproveitamento', 'ap'], ['Gols pró', 'gp'], ['Gols contra', 'gc'], ['Saldo de gols', 'sg']].forEach(function (m) {
+        var tr = mk('tr'), k = m[1], fa = k === 'ap' ? (A.ap == null ? '—' : F.pct(A.ap * 100)) : (k === 'sg' && A.sg > 0 ? '+' : '') + A[k], fb = k === 'ap' ? (B.ap == null ? '—' : F.pct(B.ap * 100)) : (k === 'sg' && B.sg > 0 ? '+' : '') + B[k];
+        tr.appendChild(mk('td', 'rl', m[0])); var ca = mk('td', (k === 'pts' || k === 'ap') ? 'hl' : '', fa), cb = mk('td', (k === 'pts' || k === 'ap') ? 'hl' : '', fb);
+        if (typeof A[k] === 'number' && typeof B[k] === 'number' && k !== 'gc' && k !== 'd' && A[k] !== B[k]) (A[k] > B[k] ? ca : cb).classList.add('best');
+        if ((k === 'gc' || k === 'd') && A[k] !== B[k]) (A[k] < B[k] ? ca : cb).classList.add('best');
+        tr.appendChild(ca); tr.appendChild(cb); tbd.appendChild(tr);
+      });
+      t.appendChild(tbd); var bx = mk('div', 'tbl-box'), sc = mk('div', 'tbl-scroll'); sc.appendChild(t); bx.appendChild(sc); box.appendChild(bx); parent.appendChild(box);
+    }
+    function dist(parent, title, arr, j, color) {
+      var box = mk('div', 'mvb'); box.appendChild(mk('div', 'flabel', title));
+      var ul = mk('ul', 'dist'); ['0 gols', '1 gol', '2 gols', '3 gols', '+ de 3 gols'].forEach(function (lab, k) {
+        var li = mk('li'); li.appendChild(mk('span', 'dl', lab)); var tr = mk('span', 'dt2'), b = mk('i'); b.style.width = (j ? arr[k] / j * 100 : 0) + '%'; b.style.background = color; tr.appendChild(b); li.appendChild(tr);
+        li.appendChild(mk('b', null, arr[k] + ' · ' + pct(arr[k], j))); ul.appendChild(li);
+      }); box.appendChild(ul); parent.appendChild(box);
+    }
+    /* gráfico: aproveitamento acumulado e média móvel (5 jogos) */
+    function apvChart(host, ser, games, tm) {
+      var W = Math.max(host.clientWidth, 280), H = W < 480 ? 280 : 330, m = { l: 42, r: 16, t: 14, b: 32 }, N = games.length;
+      var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Aproveitamento de ' + tm.n + ' ao longo dos jogos: acumulado e média móvel de 5 jogos.' }, host);
+      var pw = W - m.l - m.r, ph = H - m.t - m.b, sx = function (i) { return m.l + (N > 1 ? i / (N - 1) : 0) * pw; }, sy = function (v) { return m.t + (1 - v / 100) * ph; };
+      [0, 25, 50, 75, 100].forEach(function (v) { el('line', { x1: m.l, x2: W - m.r, y1: sy(v), y2: sy(v), stroke: C.grid, 'stroke-width': 1 }, svg); text(svg, m.l - 8, sy(v), v + '%', { anchor: 'end', size: 10.5, base: 'central' }); });
+      [1, 5, 10, 15, 20, 25, 30, 35, 38].forEach(function (g) { if (g <= N) text(svg, sx(g - 1), H - 10, String(g), { anchor: 'middle', size: 10.5 }); });
+      ser.forEach(function (s) {
+        el('path', { d: 'M' + s.v.map(function (v, i) { return sx(i) + ',' + sy(v); }).join('L'), fill: 'none', stroke: s.color, 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+      });
+      var cross = el('line', { y1: m.t, y2: m.t + ph, stroke: C.muted, 'stroke-width': 1, opacity: 0 }, svg);
+      var dots = ser.map(function (s) { return el('circle', { r: 5, fill: s.color, stroke: C.surface, 'stroke-width': 2, opacity: 0 }, svg); });
+      var hit = el('rect', { x: m.l, y: m.t, width: pw, height: ph, fill: 'transparent', tabindex: 0, 'aria-label': 'Percorra os jogos com as setas.' }, svg), idx = N - 1;
+      function at(i) {
+        i = Math.max(0, Math.min(N - 1, i)); idx = i; cross.setAttribute('x1', sx(i)); cross.setAttribute('x2', sx(i)); cross.setAttribute('opacity', 1);
+        ser.forEach(function (s, k) { dots[k].setAttribute('cx', sx(i)); dots[k].setAttribute('cy', sy(s.v[i])); dots[k].setAttribute('opacity', 1); });
+        var g = games[i], r = g.r, me = tm.n, op = TEAMS[r[3]].n;
+        var rows = ser.map(function (s) { return { color: s.color, text: s.name + ': ' + F.pct(s.v[i]) }; });
+        rows.push({ color: C.muted, text: 'R' + (g.i + 1) + ' · ' + dm(r[4]) + ' · ' + (r[0] ? me + ' ' + r[1] + ' x ' + r[2] + ' ' + op : op + ' ' + r[2] + ' x ' + r[1] + ' ' + me) });
+        return rows;
+      }
+      function off() { cross.setAttribute('opacity', 0); dots.forEach(function (d) { d.setAttribute('opacity', 0); }); hideTip(); }
+      hit.addEventListener('pointermove', function (ev) { var r = svg.getBoundingClientRect(), rows = at(Math.round(((ev.clientX - r.left - m.l) / pw) * (N - 1))); showTipRows(ev.clientX, ev.clientY, 'Jogo ' + (idx + 1), rows); });
+      hit.addEventListener('pointerleave', off);
+      hit.addEventListener('keydown', function (ev) { if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { ev.preventDefault(); var rows = at(idx + (ev.key === 'ArrowRight' ? 1 : -1)), r = svg.getBoundingClientRect(); showTipRows(r.left + sx(idx), r.top + sy(ser[0].v[idx]), 'Jogo ' + (idx + 1), rows); } });
+      hit.addEventListener('blur', off);
+    }
+    function render(s) {
+      clRoot.textContent = ''; hideTip();
+      var tm = TEAMS.filter(function (t) { return t.s === s; })[0], info = BYS[s] || {}, all = gamesOf(s), O = gsum(all), pos = standings(1, 38, 'todos').map(function (x) { return x.s; }).indexOf(s) + 1;
+      var champ = { goals: 0 }; TEAMS.forEach(function (t) { RES[t.s].forEach(function (r) { if (r[0] === 1) champ.goals += r[1] + r[2]; }); });
+      /* cabeçalho */
+      var head = mk('div', 'cl-head'), bd = dot(s); bd.className += ' xl'; head.appendChild(bd);
+      var ht = mk('div'); ht.appendChild(mk('h2', null, tm.n)); ht.appendChild(mk('p', null, [info.uf, info.estadio].filter(Boolean).join(' · ') + ' · Brasileirão Série A 2025')); head.appendChild(ht); clRoot.appendChild(head);
+      cards(clRoot, [['Posição final', pos + 'º', O.pts + ' pontos'], ['Aproveitamento', F.pct(O.ap * 100), O.j + ' jogos'], ['Vitórias · empates · derrotas', O.v + ' · ' + O.e + ' · ' + O.d], ['Saldo de gols', (O.sg > 0 ? '+' : '') + O.sg, O.gp + ' pró · ' + O.gc + ' contra']]);
+      /* gols */
+      var sg = sec('Gols');
+      cards(sg, [['Gols marcados', F.int(O.gp), F.pct(O.gp / champ.goals * 100) + ' dos gols do campeonato'], ['Gols sofridos', F.int(O.gc), F.pct(O.gc / champ.goals * 100) + ' dos gols do campeonato'],
+        ['Gols nas partidas do clube', F.int(O.gp + O.gc), F.pct((O.gp + O.gc) / champ.goals * 100) + ' dos gols do campeonato · ' + F.d2((O.gp + O.gc) / O.j) + ' por jogo']]);
+      /* mandante x visitante, 1º x 2º turno */
+      var s2 = sec('Mandante x visitante e 1º x 2º turno'), row = mk('div', 'mv two'); s2.appendChild(row);
+      dual(row, 'Mandante x visitante', 'Mandante', 'Visitante', gsum(gamesOf(s, 'todos', 'casa')), gsum(gamesOf(s, 'todos', 'fora')));
+      dual(row, '1º turno x 2º turno', '1º turno', '2º turno', gsum(gamesOf(s, '1')), gsum(gamesOf(s, '2')));
+      /* gráfico */
+      var s3 = sec('Aproveitamento ao longo do campeonato'), card = mk('div', 'ccard wide'); card.appendChild(mk('h3', null, 'Aproveitamento por partida'));
+      card.appendChild(mk('p', 'cs', 'Em ordem cronológica. Passe o mouse (ou use as setas) para ver cada jogo.')); card.style.minHeight = '0';
+      var chrono = all.slice().sort(function (x, y) { return x.r[4] - y.r[4] || x.i - y.i; }), acc = [], mov = [], pts = 0;
+      chrono.forEach(function (g, k) {
+        var p = g.r[1] > g.r[2] ? 3 : g.r[1] === g.r[2] ? 1 : 0; pts += p; acc.push(pts / (3 * (k + 1)) * 100);
+        var from = Math.max(0, k - 4), sm = 0; for (var q = from; q <= k; q++) sm += chrono[q].r[1] > chrono[q].r[2] ? 3 : chrono[q].r[1] === chrono[q].r[2] ? 1 : 0; mov.push(sm / (3 * (k - from + 1)) * 100);
+      });
+      var ser = [{ name: 'Acumulado', color: C.green, v: acc }, { name: 'Últimos 5 jogos', color: C.blue, v: mov }];
+      var lgd = mk('div', 'legend'); ser.forEach(function (x) { var sp = mk('span'), sw = mk('i'); sw.style.background = x.color; sp.appendChild(sw); sp.appendChild(document.createTextNode(x.name)); lgd.appendChild(sp); }); card.appendChild(lgd);
+      var host = mk('div', 'plot'); card.appendChild(host); card.appendChild(mk('p', 'cf', 'Acumulado: pontos conquistados ÷ pontos disputados até o jogo. Últimos 5 jogos: média móvel (nos 4 primeiros jogos usa os jogos disputados até ali).')); s3.appendChild(card);
+      var draw = function () { hideTip(); host.textContent = ''; apvChart(host, ser, chrono, tm); }; draw();
+      if ('ResizeObserver' in window) { var lw = host.clientWidth; new ResizeObserver(function () { if (Math.abs(host.clientWidth - lw) > 4) { lw = host.clientWidth; draw(); } }).observe(host); }
+      /* contra faixas da tabela */
+      var s4 = sec('Desempenho contra faixas da tabela', 'Considera a posição do adversário antes da partida (tabela atualizada até o dia anterior). A rodada 1 fica de fora.');
+      var bands = [['G4 · 1º ao 4º', function (p) { return p <= 4; }], ['Z4 · 17º ao 20º', function (p) { return p >= 17; }], ['Primeira metade · 1º ao 10º', function (p) { return p <= 10; }], ['Segunda metade · 11º ao 20º', function (p) { return p >= 11; }]];
+      var t = mk('table', 'lt'), th = mk('thead'), trh = mk('tr'); ['Adversário', 'J', 'V', 'E', 'D', 'PTS', 'APV', 'GP', 'GC', 'SG'].forEach(function (h) { trh.appendChild(mk('th', null, h)); }); th.appendChild(trh); t.appendChild(th);
+      var tbd = mk('tbody'), later = all.filter(function (g) { return g.i >= 1; });
+      bands.forEach(function (b) {
+        var list = later.filter(function (g) { return b[1](posBefore(g.r[4])[TEAMS[g.r[3]].s]); }), o = gsum(list), tr = mk('tr');
+        [b[0], o.j, o.v, o.e, o.d, o.pts, o.ap == null ? '—' : F.pct(o.ap * 100), o.gp, o.gc, (o.sg > 0 ? '+' : '') + o.sg].forEach(function (v, k) { tr.appendChild(mk('td', k === 0 ? 'rl' : k === 5 || k === 6 ? 'hl' : '', String(v))); }); tbd.appendChild(tr);
+      });
+      t.appendChild(tbd); var bx = mk('div', 'tbl-box'), sc = mk('div', 'tbl-scroll'); sc.appendChild(t); bx.appendChild(sc); s4.appendChild(bx);
+      /* resultados */
+      var s5 = sec('Resultados e gols'), bar = mk('div', 'tow-bar rbar'); bar.setAttribute('role', 'img');
+      var RS = [[O.v, C.green, 'Vitórias'], [O.e, '#A9AEC8', 'Empates'], [O.d, '#D2484F', 'Derrotas']];
+      bar.setAttribute('aria-label', RS.map(function (x) { return x[2] + ' ' + pct(x[0], O.j); }).join(', '));
+      RS.forEach(function (x) { if (!x[0]) return; var sp = mk('span', null, pct(x[0], O.j)); sp.style.flexGrow = x[0]; sp.style.background = x[1]; sp.title = x[2] + ': ' + x[0]; bar.appendChild(sp); }); s5.appendChild(bar);
+      var lg2 = mk('div', 'tow-leg'); RS.forEach(function (x) { var it = mk('span'), sw = mk('i'); sw.style.background = x[1]; it.appendChild(sw); it.appendChild(document.createTextNode(x[2] + ' · ' + x[0])); lg2.appendChild(it); }); s5.appendChild(lg2);
+      s5.appendChild(mk('div', 'ov-h', 'Partidas'));
+      cards(s5, [['Sem gols (0 x 0)', O.z, pct(O.z, O.j)], ['Sem sofrer gols', O.cs, pct(O.cs, O.j) + ' · clean sheets'], ['Marcou', O.sc, pct(O.sc, O.j)], ['Sofreu', O.cc, pct(O.cc, O.j)],
+        ['Marcou sem sofrer', O.scn, pct(O.scn, O.j)], ['Sofreu sem marcar', O.ccn, pct(O.ccn, O.j)], ['Ambas marcaram', O.both, pct(O.both, O.j)]]);
+      var dr = mk('div', 'mv two'); s5.appendChild(dr);
+      dist(dr, 'Gols marcados por partida', O.m, O.j, C.green); dist(dr, 'Gols sofridos por partida', O.s, O.j, C.blue);
+      /* público e renda */
+      if (info.s) {
+        var s6 = sec('Público e renda', 'Considera os ' + info.jogos + ' jogos em que o clube foi mandante.');
+        cards(s6, [['Público total', F.int(info.publico)], ['Público médio', F.int(info.publico_medio)], ['Renda total', F.brlc(info.renda), F.brlfull(info.renda)], ['Renda média', F.brlc(info.renda_media)], ['Ocupação', F.pct(info.ocupacao)], ['Ticket médio', F.brl(info.ticket)]]);
+      }
+    }
+    var h = (location.hash || '').replace('#', ''), start = BYS[h] || NMS.filter(function (t) { return t.s === h; })[0] ? h : 'FLA';
+    sel.value = start; render(start);
+    sel.addEventListener('change', function () { if (history.replaceState) history.replaceState(null, '', '#' + sel.value); render(sel.value); });
+  })();
+
   /* =====================  DADOS · PÚBLICO E RENDA  ===================== */
   var METRICS = [
     { k: 'publico', t: 'Público total', f: F.compact, full: F.int, d: 'Soma do público presente nos jogos.' },
