@@ -252,6 +252,7 @@
   });
 
   /* ---------- KPIs ---------- */
+  if (DS.kpi && DS.kpi.renda_media == null && DS.kpi.jogos) DS.kpi.renda_media = DS.kpi.renda_total / DS.kpi.jogos;
   document.querySelectorAll('[data-kpi]').forEach(function (n) {
     var k = n.getAttribute('data-kpi'), f = n.getAttribute('data-f') || 'int', v = DS.kpi && DS.kpi[k];
     if (v == null) return; n.textContent = F[f](v);
@@ -359,7 +360,12 @@
       if (!arr.length) return none(ol);
       arr.forEach(function (x, i) {
         var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
-        li.appendChild(mk('span', 'm', g1(x[key]) + ' · ' + F.d2(x[key] / x.j) + ' p/j')); ol.appendChild(li);
+        var tx;
+        if (key === 'sg') tx = (x.sg > 0 ? '+' : '') + x.sg + ' · ' + x.gp + ' GP · ' + x.gc + ' GC';
+        else if (key === 'v') tx = x.v + (x.v === 1 ? ' vitória' : ' vitórias') + ' · ' + F.pct(x.v / x.j * 100);
+        else if (key === 'd') tx = x.d + (x.d === 1 ? ' derrota' : ' derrotas') + ' · ' + F.pct(x.d / x.j * 100);
+        else tx = g1(x[key]) + ' · ' + F.d2(x[key] / x.j) + ' p/j';
+        li.appendChild(mk('span', 'm', tx)); ol.appendChild(li);
       });
     }
     function venue(id, src) {
@@ -378,6 +384,9 @@
     function lists(rows) {
       var pl = rows.filter(function (x) { return x.j > 0; }), nm = function (a, b) { return a.n.localeCompare(b.n, 'pt'); };
       put('st-atk', pl.slice().sort(function (a, b) { return b.gp - a.gp || b.gp / b.j - a.gp / a.j || a.gc - b.gc || nm(a, b); }).slice(0, 3), 'gp');
+      put('st-sg', pl.slice().sort(function (a, b) { return b.sg - a.sg || b.gp - a.gp || nm(a, b); }).slice(0, 3), 'sg');
+      put('st-v', pl.slice().sort(function (a, b) { return b.v - a.v || b.sg - a.sg || b.gp - a.gp || nm(a, b); }).slice(0, 3), 'v');
+      put('st-d', pl.slice().sort(function (a, b) { return a.d - b.d || b.pts - a.pts || b.sg - a.sg || nm(a, b); }).slice(0, 3), 'd');
       put('st-def', pl.slice().sort(function (a, b) { return a.gc - b.gc || a.gc / a.j - b.gc / b.j || b.gp - a.gp || nm(a, b); }).slice(0, 3), 'gc');
     }
     /* destaques: seguem a rodada/data; mandante, visitante e turnos ignoram turno/mando da tabela */
@@ -426,21 +435,35 @@
     fillRod(); render();
   })();
 
-  /* ---------- Top 10 clubes (início) ---------- */
-  document.querySelectorAll('[data-rank]').forEach(function (box) {
-    var k = box.getAttribute('data-rank'), fm = { publico: F.int, renda: F.brlc, ocupacao: F.pct, ticket: F.brl }[k];
-    if (!fm || !DS.clubes) return;
-    var rows = DS.clubes.slice().sort(function (a, b) { return b[k] - a[k] || a.nome.localeCompare(b.nome, 'pt'); }).slice(0, 10), mx = rows[0][k];
-    var ol = box.querySelector('ol'); ol.textContent = '';
-    rows.forEach(function (r, i) {
-      var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1)));
-      li.appendChild(dot(r.s));
-      var nm = mk('b', null, r.nome); li.appendChild(nm);
-      var v = mk('span', 'm', fm(r[k])); if (k === 'renda') v.title = F.brlfull(r[k]); li.appendChild(v);
-      var bar = mk('i', 'bar'); bar.style.width = (r[k] / mx * 100).toFixed(1) + '%'; li.appendChild(bar);
-      ol.appendChild(li);
+  /* ---------- Tops 5 (início): clubes, partidas, estádios e UF ---------- */
+  (function () {
+    var G = [['rt-renda', [['renda', 'maior renda', F.brlc, 'renda', 'renda'], ['ticket', 'maior ticket médio', F.brl, 'ticket', 'ticket']]],
+      ['rt-publico', [['publico', 'mais público', F.int, 'pub', 'publico'], ['ocupacao', 'maior ocupação', F.pct, 'ocup', 'ocupacao']]]];
+    function rbox(host, title, rows, fm, lab, dotFn) {
+      var box = mk('div', 'rbox'); box.appendChild(mk('div', 'flabel', title)); var ol = mk('ol'); box.appendChild(ol);
+      var mx = rows.length ? rows[0].v : 1;
+      rows.forEach(function (r, i) {
+        var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1)));
+        if (dotFn) li.appendChild(dotFn(r.o));
+        var nm = mk('b', null, lab(r.o)); nm.title = lab(r.o); li.appendChild(nm);
+        var v = mk('span', 'm', fm(r.v)); li.appendChild(v);
+        var bar = mk('i', 'bar'); bar.style.width = (mx ? r.v / mx * 100 : 0).toFixed(1) + '%'; li.appendChild(bar); ol.appendChild(li);
+      }); host.appendChild(box);
+    }
+    function top(list, key, min) {
+      return list.filter(function (o) { return !min || o.jogos >= min; }).map(function (o) { return { o: o, v: o[key] }; }).sort(function (x, y) { return y.v - x.v; }).slice(0, 5);
+    }
+    G.forEach(function (g) {
+      var host = document.getElementById(g[0]); if (!host || !DS.clubes) return;
+      g[1].forEach(function (m) {
+        var k = m[0], fm = m[2], minE = (k === 'ocupacao' || k === 'ticket') ? 5 : 0;
+        rbox(host, 'Clubes · ' + m[1], top(DS.clubes, k), fm, function (o) { return o.nome; }, function (o) { return dot(o.s); });
+        rbox(host, 'Partidas · ' + m[1], (DS.tops[k] || []).slice(0, 5).map(function (o) { return { o: o, v: o[m[3]] }; }), fm, function (o) { return o.jogo; });
+        rbox(host, 'Estádios · ' + m[1], top(DS.estadios, k, minE), fm, function (o) { return o.nome; });
+        rbox(host, 'Estados · ' + m[1], top(DS.estados, k), fm, function (o) { return o.uf + ' · ' + o.nome; });
+      });
     });
-  });
+  })();
 
   /* =====================  EVOLUÇÃO DE POSIÇÃO  ===================== */
   function evoChart(host, series, o) {
@@ -990,9 +1013,9 @@
   })();
 
   /* =====================  PÁGINA DO CLUBE  ===================== */
-  var clRoot = document.getElementById('club');
+  var clRoot = document.getElementById('club') || document.getElementById('club-home'), HOME = !!clRoot && clRoot.id === 'club-home';
   if (clRoot && TEAMS.length) (function () {
-    var sel = document.getElementById('cl-sel'), BYS = {}; (DS.clubes || []).forEach(function (c) { BYS[c.s] = c; });
+    var sel = document.getElementById('cl-sel') || document.getElementById('ch-sel'), BYS = {}; (DS.clubes || []).forEach(function (c) { BYS[c.s] = c; });
     var NMS = TEAMS.slice().sort(function (x, y) { return x.n.localeCompare(y.n, 'pt'); });
     NMS.forEach(function (t) { var o = mk('option', null, t.n); o.value = t.s; sel.appendChild(o); });
     function sec(title, sub) { var s = mk('section', 'cl-sec'); s.appendChild(mk('h2', null, title)); if (sub) s.appendChild(mk('p', 'cl-sub', sub)); clRoot.appendChild(s); return s; }
@@ -1248,6 +1271,7 @@
       top5(t5, 'Top 5 · maior renda', allG, function (w) { return w[11]; }, F.brlfull);
       top5(t5, 'Top 5 · maior ocupação', allG, function (w) { return w[9] / w[15]; }, function (v) { return F.pct(v * 100); });
       top5(t5, 'Top 5 · maior ticket médio', allG, function (w) { return w[14]; }, F.brl);
+      if (HOME) { var cta = mk('p', 'cta'), ln = mk('a', 'btn btn-primary', 'Ver a página completa de ' + tm.n); ln.href = 'clube.html#' + s; cta.appendChild(ln); clRoot.appendChild(cta); return; }
       /* confronto direto */
       var sm = sec('Confronto direto', 'Escolha um adversário para ver os jogos entre os dois clubes no campeonato.');
       var fb = mk('div', 'filters'), fg = mk('div', 'fgroup'), lb = mk('label', 'flabel', 'Adversário'), os = mk('select', 'sel'); lb.setAttribute('for', 'cl-opp'); os.id = 'cl-opp';
@@ -1307,9 +1331,9 @@
       });
       if (first && !mq.matches) pick(first[0], first[1]);
     }
-    var hh = (location.hash || '').replace('#', '').split('-'), start = BYS[hh[0]] ? hh[0] : 'FLA';
+    var hh = HOME ? [] : (location.hash || '').replace('#', '').split('-'), start = BYS[hh[0]] ? hh[0] : 'FLA';
     curOpp = hh[1] || ''; sel.value = start; render(start);
-    sel.addEventListener('change', function () { if (history.replaceState) history.replaceState(null, '', '#' + sel.value); render(sel.value); });
+    sel.addEventListener('change', function () { if (!HOME && history.replaceState) history.replaceState(null, '', '#' + sel.value); render(sel.value); });
   })();
 
   /* =====================  DADOS · PÚBLICO E RENDA  ===================== */
