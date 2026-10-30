@@ -1,10 +1,16 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stats — Data Score</title><meta name="description" content="Classificação completa, desempenho em campo, arbitragem, evolução de posição e rodadas na liderança, no G4 e no Z4 no Brasileirão 2025."><meta name="theme-color" content="#1B1F3B"><meta property="og:title" content="Stats — Data Score"><meta property="og:description" content="Classificação completa, desempenho em campo, arbitragem, evolução de posição e rodadas na liderança, no G4 e no Z4 no Brasileirão 2025."><meta property="og:type" content="website"><link rel="icon" type="image/png" href="assets/favicon.png"><link rel="apple-touch-icon" href="assets/favicon.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css"></head><body><header class="site-header"><div class="wrap"><a class="logo" href="index.html" aria-label="Data Score — início"><img src="assets/logo.png" width="100" height="40" alt="Data Score"></a><nav class="nav" aria-label="Principal"><a href="index.html">Início</a><a href="stats.html" class="on" aria-current="page">Stats</a><a href="renda.html">Renda</a><a href="clube.html">Clube</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a></nav><button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button></div></header><main>
 <section class="page-head dark" style="padding-bottom:0"><div class="wrap"><h1>Stats</h1>
 <p>Estatísticas detalhadas do Brasileirão Série A 2025: classificação completa, desempenho em campo, arbitragem, posição rodada a rodada e rodadas na liderança, no G4 e no Z4.</p>
-<nav class="anchors" aria-label="Seções desta página"><a href="#xs">Classificação completa</a><a href="#pf">Desempenho</a><a href="#ar">Arbitragem</a><a href="#evolucao">Evolução</a><a href="#faixas-sec">Faixas</a></nav></div></section>
+<nav class="anchors" aria-label="Seções desta página"><a href="#ov">Painel geral</a><a href="#xs">Classificação completa</a><a href="#pf">Desempenho</a><a href="#ar">Arbitragem</a><a href="#evolucao">Evolução</a><a href="#faixas-sec">Faixas</a></nav></div></section>
 
-<section class="sec" style="padding:44px 0 56px"><div class="wrap">
-<div class="kicker">Brasileirão 2025</div><h2>Classificação completa</h2>
+<section class="sec alt" style="padding:44px 0 56px"><div class="wrap">
+<div class="kicker">Brasileirão 2025</div><h2>Painel geral</h2>
+<div id="ov"></div>
+<p class="note">As médias por partida somam os dois times. Precisão, conversão e finalizações por gol usam os totais do campeonato.</p>
+</div></section>
+
+<section class="sec" style="padding:56px 0 56px"><div class="wrap">
+<div class="kicker">Tabela</div><h2>Classificação completa</h2>
 <div id="xs">
 <div class="filters">
 <div class="fgroup"><label class="flabel" for="xs-rod">Até a rodada</label><select class="sel" id="xs-rod"></select></div>
@@ -18,9 +24,9 @@
 <section class="sec alt" style="padding:56px 0 60px"><div class="wrap">
 <div class="kicker">Em campo</div><h2>Desempenho por time</h2>
 <div id="pf">
-<div class="filters"><div class="fgroup"><span class="flabel">Turno</span><div class="seg" role="group" aria-label="turno" data-xseg="turno"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="1">1º turno</button><button type="button" data-v="2">2º turno</button></div></div><div class="fgroup"><span class="flabel">Mando de campo</span><div class="seg" role="group" aria-label="mando" data-xseg="mando"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="casa">Mandante</button><button type="button" data-v="fora">Visitante</button></div></div></div>
+<div class="filters"><div class="fgroup"><span class="flabel">Grupo</span><div class="seg" role="group" aria-label="grupo" data-xseg="grupo"><button type="button" class="on" data-v="ataque">Ataque</button><button type="button" data-v="defesa">Defesa</button><button type="button" data-v="disciplina">Disciplina</button><button type="button" data-v="adversarios">Disciplina dos adversários</button></div></div><div class="fgroup"><span class="flabel">Turno</span><div class="seg" role="group" aria-label="turno" data-xseg="turno"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="1">1º turno</button><button type="button" data-v="2">2º turno</button></div></div><div class="fgroup"><span class="flabel">Mando de campo</span><div class="seg" role="group" aria-label="mando" data-xseg="mando"><button type="button" class="on" data-v="todos">Todos</button><button type="button" data-v="casa">Mandante</button><button type="button" data-v="fora">Visitante</button></div></div></div>
 <div class="tbl-box"><div class="tbl-scroll"><table class="dt xt wide"><thead></thead><tbody></tbody></table></div></div>
-<p class="note">PB: posse média · FIN: finalizações · CHG: chutes no gol · DFG: defesas do goleiro · ESC: escanteios · FAL: faltas · DES: desarmes · CA, CV, CT: cartões amarelos, vermelhos e total · PREC: chutes no gol ÷ finalizações · CONV: gols ÷ finalizações · FIN/G e CHG/G: finalizações e chutes no gol por gol marcado. Aqui o filtro vale para turno e mando; rodada e data ficam na classificação.</p></div>
+<p class="note">Ataque: PB posse média · FIN finalizações · CHG chutes a gol · ESC escanteios · PREC chutes a gol ÷ finalizações · CONV gols ÷ finalizações · FIN/G e CHG/G finalizações e chutes a gol para fazer um gol. Defesa: os mesmos números cedidos aos adversários; FIN/G e CHG/G são os necessários para sofrer um gol. Disciplina: FAL faltas cometidas · DES desarmes · CA, CV e CT cartões amarelos, vermelhos e total. Disciplina dos adversários: faltas, desarmes e cartões dos times que enfrentaram o clube. O filtro vale para turno e mando; rodada e data ficam na classificação.</p></div>
 </div></section>
 
 <section class="sec" style="padding:56px 0 60px"><div class="wrap">
@@ -37,7 +43,7 @@
 <h2>Evolução na tabela</h2>
 <div class="evo-grid" style="margin-top:22px">
 <div class="ccard wide" id="evo"><div class="tools"><button type="button" data-toggle>Tabela</button></div>
-<h3>Posição na classificação após cada rodada</h3><p class="cs" style="min-height:0;margin-bottom:12px">1º lugar no topo. Passe o mouse (ou use as setas ← →) para ver a posição e os pontos em cada rodada.</p>
+<h3>Posição na classificação após cada rodada</h3>
 <div class="evo-ctl"><label for="evo-a">Time<select class="sel dk" id="evo-a"></select></label><label for="evo-b">Comparar com<select class="sel dk" id="evo-b"></select></label></div>
 <div class="legend" id="evo-leg" aria-live="polite"></div>
 <div class="plot"></div><div class="tbl-wrap" hidden></div>
