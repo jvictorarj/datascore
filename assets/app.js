@@ -270,20 +270,21 @@
   function alt(a, b, n) { var r = []; for (var i = 0; i < n; i++) r.push([i % 2 ? b : a, 1]); return r; }
   var TC = {
     FLA: ['h', alt('#D4001A', K, 6)], PAL: ['h', [['#006437', 1]]], CRU: ['h', [['#0033A0', 1]]],
-    COR: ['h', [[W, 3], [K, 1]]], BAH: ['h', [['#0057B8', 1], [W, 1], ['#E4002B', 1]]],
-    CEA: ['v', alt(K, W, 6)], FLU: ['v', [['#7B1E3A', 3], [W, 1], ['#006A4E', 3], [W, 1], ['#7B1E3A', 3], [W, 1], ['#006A4E', 3]]],
-    SAO: ['h', [[W, 3], ['#E4002B', 1], [K, 1], [W, 3]]], CAM: ['v', alt(K, W, 6)],
-    FOR: ['v', [['#00539F', 1], [W, 1], ['#D2232A', 1], ['#00539F', 1], [W, 1], ['#D2232A', 1]]],
+    COR: ['h', [[W, 3], [K, 1]]], BAH: ['v', [['#0057B8', 1], [W, 1], ['#E4002B', 1]]],
+    CEA: ['v', [[W, 3], [K, 1], [W, 3], [K, 1], [W, 3]]], FLU: ['v', [['#7B1E3A', 3], [W, 1], ['#006A4E', 3], [W, 1], ['#7B1E3A', 3], [W, 1], ['#006A4E', 3]]],
+    SAO: ['h', [[W, 3], ['#E4002B', 1], [K, 1], [W, 3]]], CAM: ['v', alt(K, W, 5)],
+    FOR: ['h', [['#00539F', 1], [W, 1], ['#D2232A', 1], ['#00539F', 1], [W, 1], ['#D2232A', 1]]],
     GRE: ['v', [['#0D80BF', 2], [K, 1], [W, 1], ['#0D80BF', 2], [K, 1], [W, 1]]], INT: ['h', [['#E5050F', 1]]],
     VAS: ['d', [[W, 2], [K, 1], [W, 2]]], VIT: ['v', alt('#D4001A', K, 6)], SAN: ['h', [[W, 1]]],
-    BOT: ['v', alt(K, W, 6)], SPO: ['v', alt('#D4001A', K, 6)], JUV: ['v', alt('#006437', W, 6)],
+    BOT: ['v', [[K, 3], [W, 1], [K, 3], [W, 1], [K, 3]]], SPO: ['v', alt('#D4001A', K, 6), '#F2C200'], JUV: ['v', alt('#006437', W, 6)],
     MIR: ['h', [['#FCDD09', 2], ['#00A859', 1]]], RBB: ['h', [[W, 3], ['#D4001A', 1]]]
   };
   function dot(s) {
     var sp = TC[s] || ['h', [['#999999', 1]]], tot = 0, acc = 0, st = [];
     sp[1].forEach(function (p) { tot += p[1]; });
     sp[1].forEach(function (p) { var a0 = acc / tot * 100; acc += p[1]; st.push(p[0] + ' ' + a0.toFixed(2) + '% ' + (acc / tot * 100).toFixed(2) + '%'); });
-    var d = mk('span', 'tdot'); d.style.background = 'linear-gradient(' + (sp[0] === 'h' ? 'to bottom' : sp[0] === 'v' ? 'to right' : '45deg') + ',' + st.join(',') + ')';
+    var d = mk('span', 'tdot'); d.style.background = 'linear-gradient(' + (sp[0] === 'h' ? 'to bottom' : sp[0] === 'v' ? 'to right' : '135deg') + ',' + st.join(',') + ')';
+    if (sp[2]) d.style.boxShadow = 'inset 0 0 0 2.5px ' + sp[2];
     d.setAttribute('aria-hidden', 'true'); return d;
   }
 
@@ -347,32 +348,41 @@
     }
     function td(cls, txt) { return mk('td', cls, txt); }
     function g1(n) { return n + (n === 1 ? ' gol' : ' gols'); }
-    function lists(rows, hrows, arows) {
+    function none(ol) { ol.appendChild(mk('li', 'empty', 'Ainda sem jogos')); }
+    function put(id, arr, key) {
+      var ol = document.getElementById(id); if (!ol) return; ol.textContent = '';
+      if (!arr.length) return none(ol);
+      arr.forEach(function (x, i) {
+        var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
+        li.appendChild(mk('span', 'm', g1(x[key]) + ' · ' + F.d2(x[key] / x.j) + ' p/j')); ol.appendChild(li);
+      });
+    }
+    function venue(id, src) {
+      var ol = document.getElementById(id); if (!ol) return; ol.textContent = '';
+      var nm = function (a, b) { return a.n.localeCompare(b.n, 'pt'); };
+      var arr = src.filter(function (x) { return x.j > 0; }).sort(function (a, b) { return b.ap - a.ap || b.pts - a.pts || b.v - a.v || b.sg - a.sg || b.gp - a.gp || nm(a, b); }).slice(0, 3);
+      if (!arr.length) return none(ol);
+      arr.forEach(function (x, i) {
+        var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
+        li.appendChild(mk('span', 'm ap', F.pct(x.ap)));
+        li.appendChild(mk('span', 'm2', x.v + (x.v === 1 ? ' vit' : ' vit') + ' · ' + x.gp + ' GP · ' + x.gc + ' GC'));
+        ol.appendChild(li);
+      });
+    }
+    /* ataque e defesa seguem todos os filtros (rows já filtradas) */
+    function lists(rows) {
       var pl = rows.filter(function (x) { return x.j > 0; }), nm = function (a, b) { return a.n.localeCompare(b.n, 'pt'); };
-      var atk = pl.slice().sort(function (a, b) { return b.gp - a.gp || b.gp / b.j - a.gp / a.j || a.gc - b.gc || nm(a, b); }).slice(0, 3);
-      var def = pl.slice().sort(function (a, b) { return a.gc - b.gc || a.gc / a.j - b.gc / b.j || b.gp - a.gp || nm(a, b); }).slice(0, 3);
-      function put(id, arr, key) {
-        var ol = document.getElementById(id); ol.textContent = '';
-        arr.forEach(function (x, i) {
-          var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
-          li.appendChild(mk('span', 'm', g1(x[key]) + ' · ' + F.d2(x[key] / x.j) + ' por jogo')); ol.appendChild(li);
-        });
-      }
-      put('st-atk', atk, 'gp'); put('st-def', def, 'gc');
-      function venue(id, src) {
-        var ol = document.getElementById(id); ol.textContent = '';
-        src.filter(function (x) { return x.j > 0; }).sort(function (a, b) { return b.ap - a.ap || b.pts - a.pts || b.v - a.v || b.sg - a.sg || b.gp - a.gp || nm(a, b); }).slice(0, 3).forEach(function (x, i) {
-          var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
-          li.appendChild(mk('span', 'm ap', F.pct(x.ap)));
-          li.appendChild(mk('span', 'm2', x.j + (x.j === 1 ? ' jogo' : ' jogos') + ' · ' + x.v + (x.v === 1 ? ' vitória' : ' vitórias') + ' · ' + x.gp + ' GP · ' + x.gc + ' GC'));
-          ol.appendChild(li);
-        });
-      }
-      venue('st-home', hrows); venue('st-away', arows);
+      put('st-atk', pl.slice().sort(function (a, b) { return b.gp - a.gp || b.gp / b.j - a.gp / a.j || a.gc - b.gc || nm(a, b); }).slice(0, 3), 'gp');
+      put('st-def', pl.slice().sort(function (a, b) { return a.gc - b.gc || a.gc / a.j - b.gc / b.j || b.gp - a.gp || nm(a, b); }).slice(0, 3), 'gc');
+    }
+    /* destaques: seguem a rodada/data; mandante, visitante e turnos ignoram turno/mando da tabela */
+    function highlights(hi, cut) {
+      venue('hl-home', standings(1, hi, 'casa', cut)); venue('hl-away', standings(1, hi, 'fora', cut));
+      venue('hl-t1', standings(1, Math.min(hi, 19), 'todos', cut));
+      venue('hl-t2', hi >= 20 ? standings(20, hi, 'todos', cut) : []);
     }
     function render() {
       var r = range(), hi = S.date != null ? r[1] : S.hi, cut = S.date, rows = standings(r[0], hi, S.mando, cut), zones = S.mando === 'todos';
-      var hrows = S.mando === 'casa' ? rows : standings(r[0], hi, 'casa', cut), arows = S.mando === 'fora' ? rows : standings(r[0], hi, 'fora', cut);
       body.textContent = '';
       rows.forEach(function (x, i) {
         var tr = mk('tr', zones ? (i < 4 ? 'g4' : i >= 16 ? 'z4' : '') : '');
@@ -385,7 +395,7 @@
         body.appendChild(tr);
       });
       zleg.querySelectorAll('span:not(.fleg)').forEach(function (s) { s.hidden = !zones; });
-      lists(rows, hrows, arows);
+      lists(rows); highlights(S.date != null ? 38 : S.hi, cut);
     }
     document.querySelectorAll('[data-seg]').forEach(function (g) {
       var key = g.getAttribute('data-seg');
@@ -410,6 +420,22 @@
     dX.addEventListener('click', function () { S.date = null; dIn.value = ''; dX.hidden = true; S.hi = range()[1]; fillRod(); render(); });
     fillRod(); render();
   })();
+
+  /* ---------- Top 10 clubes (início) ---------- */
+  document.querySelectorAll('[data-rank]').forEach(function (box) {
+    var k = box.getAttribute('data-rank'), fm = { publico: F.int, renda: F.brlc, ocupacao: F.pct, ticket: F.brl }[k];
+    if (!fm || !DS.clubes) return;
+    var rows = DS.clubes.slice().sort(function (a, b) { return b[k] - a[k] || a.nome.localeCompare(b.nome, 'pt'); }).slice(0, 10), mx = rows[0][k];
+    var ol = box.querySelector('ol'); ol.textContent = '';
+    rows.forEach(function (r, i) {
+      var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1)));
+      li.appendChild(dot(r.s));
+      var nm = mk('b', null, r.nome); li.appendChild(nm);
+      var v = mk('span', 'm', fm(r[k])); if (k === 'renda') v.title = F.brlfull(r[k]); li.appendChild(v);
+      var bar = mk('i', 'bar'); bar.style.width = (r[k] / mx * 100).toFixed(1) + '%'; li.appendChild(bar);
+      ol.appendChild(li);
+    });
+  });
 
   /* =====================  EVOLUÇÃO DE POSIÇÃO  ===================== */
   function evoChart(host, series, o) {
@@ -490,6 +516,7 @@
     }
     /* comparação: dados dos dois times e confrontos diretos até a rodada i+1 */
     function compare(i, ser) {
+      cmp.parentNode.classList.toggle('solo', ser.length < 2);
       if (ser.length < 2) { cmp.hidden = true; cmp.textContent = ''; return; }
       cmp.hidden = false; cmp.textContent = '';
       var A = ser[0], B = ser[1], rows = ROW[i];
@@ -547,6 +574,31 @@
     if ('ResizeObserver' in window) {
       var lastW = host.clientWidth;
       new ResizeObserver(function () { if (!host.hidden && Math.abs(host.clientWidth - lastW) > 4) { lastW = host.clientWidth; draw(); } }).observe(host);
+    }
+
+    /* líder de cada rodada: 38 bolinhas, 19 por linha */
+    var lead = document.getElementById('lead');
+    if (lead) {
+      var LS = ROW.map(function (rw) { return rw[0].s; }), cnt = {};
+      LS.forEach(function (s) { cnt[s] = (cnt[s] || 0) + 1; });
+      [[0, 'turno 1'], [19, 'turno 2']].forEach(function (rg, k) {
+        var row = lead.querySelector('[data-lrow="' + k + '"]'); row.textContent = '';
+        for (var q = rg[0]; q < rg[0] + 19; q++) {
+          var c = mk('div', 'lc'), d = dot(LS[q]); c.setAttribute('data-s', LS[q]); c.tabIndex = 0;
+          var ttl = 'Rodada ' + (q + 1) + ' · Líder: ' + NM[LS[q]] + ' (' + ROW[q][0].pts + ' pts)';
+          c.title = ttl; c.setAttribute('aria-label', ttl);
+          c.appendChild(mk('small', null, String(q + 1))); c.appendChild(d); row.appendChild(c);
+        }
+      });
+      var lg = lead.querySelector('.llegend'); lg.textContent = '';
+      Object.keys(cnt).sort(function (x, y) { return cnt[y] - cnt[x] || NM[x].localeCompare(NM[y], 'pt'); }).forEach(function (s) {
+        var it = mk('span', 'li2'); it.tabIndex = 0; it.setAttribute('data-s', s); it.appendChild(dot(s)); it.appendChild(document.createTextNode(NM[s] + ' '));
+        it.appendChild(mk('em', null, cnt[s] + (cnt[s] === 1 ? ' rodada' : ' rodadas')));
+        function on() { lead.setAttribute('data-hl', s); lead.querySelectorAll('.lc').forEach(function (c) { c.classList.toggle('hl', c.getAttribute('data-s') === s); }); }
+        function off() { lead.removeAttribute('data-hl'); lead.querySelectorAll('.lc.hl').forEach(function (c) { c.classList.remove('hl'); }); }
+        it.addEventListener('mouseenter', on); it.addEventListener('focus', on); it.addEventListener('mouseleave', off); it.addEventListener('blur', off);
+        lg.appendChild(it);
+      });
     }
 
     /* rodadas na liderança, G4 e Z4 (todos os times) */
