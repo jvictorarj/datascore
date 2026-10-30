@@ -13,20 +13,35 @@
 </div>
 <div class="st-grid"><div class="st-main">
 <div class="tbl-box"><div class="tbl-scroll"><table class="st" id="st-table"><caption class="sr">Classificação do Campeonato Brasileiro Série A 2025</caption><thead><tr><th scope="col">Time</th><th scope="col" title="Pontos">P</th><th scope="col" title="Jogos">J</th><th scope="col" title="Vitórias">V</th><th scope="col" title="Empates">E</th><th scope="col" title="Derrotas">D</th><th scope="col" title="Gols pró">GP</th><th scope="col" title="Gols contra">GC</th><th scope="col" title="Saldo de gols">SG</th><th scope="col" title="Aproveitamento">%</th><th scope="col" title="Últimos 5 jogos, do mais antigo ao mais recente">Últimos 5</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<aside class="asd" aria-live="polite"><div><div class="flabel">Melhores ataques</div><ol id="st-atk"></ol></div><div><div class="flabel">Melhores defesas</div><ol id="st-def"></ol></div><div><div class="flabel">Melhores saldos de gols</div><ol id="st-sg"></ol></div><div><div class="flabel">Mais vitórias</div><ol id="st-v"></ol></div><div><div class="flabel">Menos derrotas</div><ol id="st-d"></ol></div></aside></div>
 <div class="zleg" id="st-zleg"><span><i style="background:var(--green)"></i>G4 · Libertadores</span><span><i style="background:#D2484F"></i>Z4 · rebaixamento</span><span class="fleg"><b class="fd w"></b>vitória<b class="fd e"></b>empate<b class="fd l"></b>derrota</span></div>
-<p class="note">Desempate: pontos, vitórias, saldo de gols e gols pró.</p></div>
-<aside class="asd" aria-live="polite"><div><div class="flabel">Melhores ataques</div><ol id="st-atk"></ol></div><div><div class="flabel">Melhores defesas</div><ol id="st-def"></ol></div></aside></div>
+<p class="note">Desempate: pontos, vitórias, saldo de gols e gols pró.</p>
+
 <p class="cta"><a class="btn btn-primary" href="stats.html">Ver estatísticas detalhadas</a></p>
 </div></section>
 
 <section class="sec alt" id="publico-renda"><div class="wrap">
 <div class="kicker">Público e renda</div>
 <h2>Resumo da temporada</h2>
-<div class="kpis six">
-<div class="kpi"><div class="kl">Público total</div><div class="kv" data-kpi="publico_total" data-f="int">—</div><div class="ks">soma das 38 rodadas</div></div><div class="kpi"><div class="kl">Renda total</div><div class="kv" data-kpi="renda_total" data-f="brlc">—</div><div class="ks"><span data-kpi="renda_total" data-f="brlfull"></span></div></div><div class="kpi"><div class="kl">Ocupação dos estádios</div><div class="kv" data-kpi="ocupacao" data-f="pct">—</div><div class="ks">público ÷ capacidade</div></div><div class="kpi"><div class="kl">Público por partida</div><div class="kv" data-kpi="media_presenca" data-f="int">—</div><div class="ks">média de presentes por jogo</div></div><div class="kpi"><div class="kl">Ticket médio</div><div class="kv" data-kpi="ticket_medio" data-f="brl">—</div><div class="ks">média do ticket de cada jogo</div></div><div class="kpi"><div class="kl">Público por rodada</div><div class="kv" data-kpi="media_rodada" data-f="int">—</div><div class="ks">média de presentes por rodada</div></div>
+<h3 class="grp">Renda</h3>
+<div class="kpis three">
+<div class="kpi"><div class="kl">Renda total</div><div class="kv" data-kpi="renda_total" data-f="brlc">—</div><div class="ks"><span data-kpi="renda_total" data-f="brlfull"></span></div></div><div class="kpi"><div class="kl">Renda média por partida</div><div class="kv" data-kpi="renda_media" data-f="brlfull">—</div><div class="ks">bilheteria média de cada jogo</div></div><div class="kpi"><div class="kl">Ticket médio</div><div class="kv" data-kpi="ticket_medio" data-f="brl">—</div><div class="ks">média do ticket de cada jogo</div></div>
 </div>
-<div class="r10"><div class="rbox" data-rank="publico"><div class="flabel">Top 10 · mais público presente</div><ol></ol></div><div class="rbox" data-rank="renda"><div class="flabel">Top 10 · maior renda</div><ol></ol></div><div class="rbox" data-rank="ocupacao"><div class="flabel">Top 10 · maior ocupação</div><ol></ol></div><div class="rbox" data-rank="ticket"><div class="flabel">Top 10 · maior ticket médio</div><ol></ol></div></div>
-<p class="rnote">Rankings por clube, considerando os jogos em que o clube foi mandante.</p>
+<div class="r10" id="rt-renda"></div>
+<h3 class="grp">Público</h3>
+<div class="kpis three">
+<div class="kpi"><div class="kl">Presente total</div><div class="kv" data-kpi="publico_total" data-f="int">—</div><div class="ks">soma das 38 rodadas</div></div><div class="kpi"><div class="kl">Presente por partida</div><div class="kv" data-kpi="media_presenca" data-f="int">—</div><div class="ks">média de presentes por jogo</div></div><div class="kpi"><div class="kl">Ocupação</div><div class="kv" data-kpi="ocupacao" data-f="pct">—</div><div class="ks">público ÷ capacidade</div></div>
+</div>
+<div class="r10" id="rt-publico"></div>
+<p class="rnote">Clubes: jogos em que o clube foi mandante. Estádios com menos de 5 jogos ficam fora dos rankings de ocupação e ticket médio.</p>
 <p class="cta"><a class="btn btn-primary" href="renda.html">Ver mais dados de público e renda</a></p>
+</div></section>
+
+<section class="sec" id="clubes"><div class="wrap">
+<div class="kicker">Clubes</div>
+<h2>Clube a clube</h2>
+<div class="filters"><div class="fgroup"><label class="flabel" for="ch-sel">Escolha um clube</label><select class="sel" id="ch-sel"></select></div></div>
+<div id="club-home"></div>
 </div></section>
 </main><footer class="site-footer"><div class="wrap"><div class="foot-top"><div><a class="logo" href="index.html" aria-label="Data Score — início"><img src="assets/logo.png" width="100" height="40" alt="Data Score"></a><div class="tag">Mais dados. Mais futebol.</div></div><nav class="foot-nav" aria-label="Rodapé"><a href="index.html">Início</a><a href="stats.html">Stats</a><a href="renda.html">Renda</a><a href="clube.html">Clube</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a></nav><div class="foot-soc"><a href="https://www.linkedin.com/in/jvictorarj" target="_blank" rel="noopener" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.500 3A2.500 2.500 0 1 0 4.500 8 2.500 2.500 0 0 0 4.500 3zM2 9.500h5V22H2zM9.500 9.500h4.800v1.800h.1c.7-1.200 2.300-2.100 4.200-2.100 4.500 0 5.400 2.900 5.400 6.700V22h-5v-5.500c0-1.400 0-3.100-1.900-3.100s-2.200 1.500-2.200 3V22h-5z"/></svg></a></div></div><div class="foot-bot"><span>© 2026 Data Score. Todos os direitos reservados.</span><span>Projeto independente.</span></div></div></footer><script src="assets/data.js"></script><script src="assets/app.js"></script></body></html>
