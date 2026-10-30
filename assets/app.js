@@ -259,6 +259,17 @@
 
   /* =====================  CLASSIFICAÇÃO  ===================== */
   var TEAMS = DS.tab ? DS.tab.times : [], RES = DS.tab ? DS.tab.res : {};
+  /* cores dos times (faixas horizontais): só enfeite, não são escudos */
+  var TC = { FLA: ['#D4001A', '#111111'], PAL: ['#006437'], CRU: ['#0033A0'], COR: ['#111111', '#FFFFFF'], BAH: ['#0057B8', '#FFFFFF', '#E4002B'],
+    CEA: ['#111111', '#FFFFFF'], FLU: ['#7B1E3A', '#FFFFFF', '#006A4E'], SAO: ['#E4002B', '#FFFFFF', '#111111'], CAM: ['#111111', '#FFFFFF'],
+    FOR: ['#00539F', '#D2232A', '#FFFFFF'], GRE: ['#0D80BF', '#111111', '#FFFFFF'], INT: ['#E5050F', '#FFFFFF'], VAS: ['#111111', '#FFFFFF'],
+    VIT: ['#D4001A', '#111111'], SAN: ['#FFFFFF', '#111111'], BOT: ['#111111', '#FFFFFF'], SPO: ['#D4001A', '#111111'], JUV: ['#006437', '#FFFFFF'],
+    MIR: ['#FCDD09', '#00A859'], RBB: ['#FFFFFF', '#D4001A'] };
+  function dot(s) {
+    var cs = TC[s] || ['#999'], n = cs.length, st = [];
+    cs.forEach(function (c, i) { st.push(c + ' ' + (i / n * 100) + '% ' + ((i + 1) / n * 100) + '%'); });
+    var d = mk('span', 'tdot'); d.style.background = 'linear-gradient(to bottom,' + st.join(',') + ')'; d.setAttribute('aria-hidden', 'true'); return d;
+  }
   function standings(lo, hi, mando) {
     var rows = TEAMS.map(function (t) {
       var w = 0, e = 0, d = 0, gp = 0, gc = 0;
@@ -280,21 +291,34 @@
   var stTable = document.getElementById('st-table');
   if (stTable && TEAMS.length) (function () {
     var S = { turno: 'todos', hi: 38, mando: 'todos' };
-    var sel = document.getElementById('st-rod'), body = stTable.querySelector('tbody'), note = document.getElementById('st-note'), zleg = document.getElementById('st-zleg');
+    var sel = document.getElementById('st-rod'), body = stTable.querySelector('tbody'), zleg = document.getElementById('st-zleg');
     function range() { return S.turno === '2' ? [20, 38] : S.turno === '1' ? [1, 19] : [1, 38]; }
     function fillRod() {
       var r = range(); sel.textContent = '';
-      for (var i = r[0]; i <= r[1]; i++) { var o = mk('option', null, i === r[1] && r[1] === 38 && r[0] === 1 ? 'Rodada 38 (final)' : 'Rodada ' + i); o.value = i; sel.appendChild(o); }
+      for (var i = r[0]; i <= r[1]; i++) { var o = mk('option', null, 'Rodada ' + i); o.value = i; sel.appendChild(o); }
       if (S.hi < r[0] || S.hi > r[1]) S.hi = r[1];
       sel.value = S.hi;
     }
     function td(cls, txt) { return mk('td', cls, txt); }
+    function names(arr) { return arr.length === 1 ? arr[0].n : arr.length === 2 ? arr[0].n + ' e ' + arr[1].n : arr.length + ' times empatados'; }
+    function best(rows) {
+      var pl = rows.filter(function (x) { return x.j > 0; });
+      var ga = Math.max.apply(null, pl.map(function (x) { return x.gp; })), gd = Math.min.apply(null, pl.map(function (x) { return x.gc; }));
+      var at = pl.filter(function (x) { return x.gp === ga; }), de = pl.filter(function (x) { return x.gc === gd; });
+      function put(id, arr, g, key) {
+        var v = document.getElementById(id), sub = document.getElementById(id + '-s'); v.textContent = '';
+        if (arr.length <= 2) arr.forEach(function (x) { v.appendChild(dot(x.s)); });
+        v.appendChild(document.createTextNode(names(arr)));
+        sub.textContent = g + (g === 1 ? ' gol' : ' gols') + (arr.length === 1 ? ' · ' + F.d2(g / arr[0].j) + ' por jogo' : (key === 'gp' ? ' marcados' : ' sofridos'));
+      }
+      put('st-atk', at, ga, 'gp'); put('st-def', de, gd, 'gc');
+    }
     function render() {
       var r = range(), rows = standings(r[0], S.hi, S.mando), zones = S.mando === 'todos';
       body.textContent = '';
       rows.forEach(function (x, i) {
         var tr = mk('tr', zones ? (i < 4 ? 'g4' : i >= 16 ? 'z4' : '') : '');
-        var c0 = mk('td'); c0.appendChild(mk('span', 'pos', String(i + 1))); c0.appendChild(document.createTextNode(x.n)); tr.appendChild(c0);
+        var c0 = mk('td'); c0.appendChild(mk('span', 'pos', String(i + 1))); c0.appendChild(dot(x.s)); c0.appendChild(document.createTextNode(x.n)); tr.appendChild(c0);
         tr.appendChild(td('p', x.pts)); tr.appendChild(td('', x.j)); tr.appendChild(td('', x.v)); tr.appendChild(td('', x.e)); tr.appendChild(td('', x.d));
         tr.appendChild(td('', x.gp)); tr.appendChild(td('', x.gc));
         tr.appendChild(td(x.sg > 0 ? 'sgp' : x.sg < 0 ? 'sgn' : '', (x.sg > 0 ? '+' : '') + x.sg));
@@ -302,9 +326,7 @@
         body.appendChild(tr);
       });
       zleg.hidden = !zones;
-      var turnoTxt = S.turno === '1' ? '1º turno' : S.turno === '2' ? '2º turno' : 'campeonato inteiro';
-      var mandoTxt = S.mando === 'casa' ? 'somente jogos como mandante' : S.mando === 'fora' ? 'somente jogos como visitante' : 'todos os jogos';
-      note.textContent = turnoTxt.charAt(0).toUpperCase() + turnoTxt.slice(1) + ' · rodadas ' + r[0] + ' a ' + S.hi + ' · ' + mandoTxt + '.';
+      best(rows);
     }
     document.querySelectorAll('[data-seg]').forEach(function (g) {
       var key = g.getAttribute('data-seg');
@@ -390,7 +412,7 @@
       leg.textContent = '';
       ser.forEach(function (s) {
         var sp = mk('span'), sw = mk('i'); sw.style.background = s.color; sp.appendChild(sw);
-        sp.appendChild(document.createTextNode(s.name + ' '));
+        sp.appendChild(dot(s.id)); sp.appendChild(document.createTextNode(s.name + ' '));
         sp.appendChild(mk('em', null, s.pos[i] + 'º · ' + s.pts[i] + ' pts' + (i === 37 ? ' (rodada 38)' : ' (rodada ' + (i + 1) + ')')));
         leg.appendChild(sp);
       });

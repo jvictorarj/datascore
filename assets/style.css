@@ -322,3 +322,17 @@ table.dt.tops td:first-child,table.dt.tops th:first-child{text-align:center;widt
   .logo img{height:32px}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* v3: tabela mais compacta e centralizada, bolinhas de cor, cards de ataque/defesa */
+table.st{font-size:13px;min-width:600px}
+table.st th{font-size:11px;padding:10px 8px;text-align:center}
+table.st td{padding:8px 8px;text-align:center}
+table.st th:first-child,table.st td:first-child{text-align:left}
+table.st td:first-child{min-width:190px;padding-left:12px}
+table.st .pos{min-width:24px;font-size:12px}
+.tdot{display:inline-block;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(27,31,59,.28);vertical-align:-2px;margin-right:8px;flex:none}
+.legend .tdot{box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);margin-right:6px;vertical-align:-2px}
+.kv .tdot{width:18px;height:18px;margin-right:8px;vertical-align:-1px}
+.kpis.two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:680px;margin:22px 0 0}
+.kpis.two .kv{font-size:24px;white-space:normal}
+@media(max-width:560px){.kpis.two{grid-template-columns:1fr}.kpis.two .kv{font-size:21px}table.st td:first-child{min-width:150px}}
