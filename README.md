@@ -7,8 +7,9 @@ Site estático do projeto **Data Score** — inteligência de dados do futebol b
 ## O que este repositório contém
 
 - `index.html`, `dados.html`, `sobre.html`, `metodologia.html`, `contato.html` — páginas do site
-- `assets/style.css`, `assets/app.js` — estilo e gráficos (SVG, sem dependências)
-- `assets/data.js` — **apenas indicadores agregados** (por clube, dia, horário, região, rodada)
+- `assets/style.css`, `assets/app.js` — estilo, classificação e gráficos (SVG, sem dependências)
+- `assets/logo.png`, `assets/favicon.png` — identidade visual
+- `assets/data.js` — **apenas agregados** (estado, estádio, clube, rodada), os placares usados na classificação e os rankings Top 10
 
 ## O que este repositório NÃO contém
 
