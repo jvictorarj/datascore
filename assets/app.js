@@ -633,6 +633,155 @@
     draw(); fxRender();
   })();
 
+  /* =====================  STATS · TABELAS DETALHADAS  ===================== */
+  /* tabela ordenável: cols = [{h, t(título), v(linha)->valor, f(valor)->texto, s: 'text'|undefined}] */
+  function xtable(host, cols, defKey, defAsc) {
+    var thead = host.querySelector('thead'), tbody = host.querySelector('tbody'), sk = defKey, asc = !!defAsc, rows = [];
+    thead.textContent = ''; var trh = mk('tr');
+    cols.forEach(function (c, i) {
+      var th = mk('th', null, c.h); if (c.t) th.title = c.t; th.tabIndex = 0; th.setAttribute('role', 'button'); if (!c.s) th.setAttribute('data-num', '1'); else th.style.textAlign = 'left';
+      function go() { if (sk === i) asc = !asc; else { sk = i; asc = !!c.s; } draw(); }
+      th.addEventListener('click', go); th.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    function draw() {
+      var data = rows.slice(), c = cols[sk];
+      data.sort(function (x, y) {
+        var p = c.v(x), q = c.v(y);
+        if (p == null) p = -Infinity; if (q == null) q = -Infinity;
+        var d = typeof p === 'string' ? p.localeCompare(q, 'pt') : p - q;
+        return (asc ? d : -d) || x._i - y._i;
+      });
+      tbody.textContent = '';
+      data.forEach(function (r) {
+        var tr = mk('tr');
+        cols.forEach(function (cc, i) {
+          var v = cc.v(r), td = mk('td', i === sk ? 'hl' : ''); if (cc.s) td.style.textAlign = 'left';
+          if (cc.cell) cc.cell(td, r); else td.textContent = v == null ? '—' : (cc.f ? cc.f(v) : String(v));
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      thead.querySelectorAll('th').forEach(function (th, i) { th.classList.toggle('s', i === sk); th.classList.toggle('asc', i === sk && asc); th.setAttribute('aria-sort', i === sk ? (asc ? 'ascending' : 'descending') : 'none'); });
+    }
+    return { set: function (r) { rows = r; rows.forEach(function (x, i) { x._i = i; }); draw(); } };
+  }
+  function teamCell(td, r) { td.appendChild(dot(r.s)); td.appendChild(document.createTextNode(r.n)); }
+  function wireSeg(root, attr, S, onChange) {
+    root.querySelectorAll('[' + attr + ']').forEach(function (g) {
+      var key = g.getAttribute(attr);
+      g.querySelectorAll('button').forEach(function (b) {
+        b.setAttribute('aria-pressed', b.classList.contains('on'));
+        b.addEventListener('click', function () {
+          g.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+          S[key] = b.getAttribute('data-v'); onChange(key);
+        });
+      });
+    });
+  }
+  function trange(t) { return t === '2' ? [20, 38] : t === '1' ? [1, 19] : [1, 38]; }
+  function rate(n, d) { return d ? n / d : null; }
+
+  /* 1) classificação completa (rodada, data, turno, mando) */
+  var xsRoot = document.getElementById('xs');
+  if (xsRoot && TEAMS.length) (function () {
+    var S = { turno: 'todos', hi: 38, mando: 'todos', date: null };
+    var sel = document.getElementById('xs-rod'), dIn = document.getElementById('xs-date'), dX = document.getElementById('xs-date-x');
+    var minD = 1e9, maxD = -1e9;
+    TEAMS.forEach(function (t) { RES[t.s].forEach(function (r) { minD = Math.min(minD, r[4]); maxD = Math.max(maxD, r[4]); }); });
+    dIn.min = dayISO(minD); dIn.max = dayISO(maxD);
+    var rg = function () { return trange(S.turno); };
+    function fillRod() {
+      var r = rg(); sel.textContent = '';
+      if (S.date != null) { var o0 = mk('option', null, 'Por data'); o0.value = ''; sel.appendChild(o0); }
+      for (var i = r[0]; i <= r[1]; i++) { var o = mk('option', null, 'Rodada ' + i); o.value = i; sel.appendChild(o); }
+      if (S.hi < r[0] || S.hi > r[1]) S.hi = r[1];
+      sel.value = S.date != null ? '' : S.hi;
+    }
+    var f2 = F.d2, P = function (v) { return F.pct(v * 100); };
+    var tb = xtable(xsRoot.querySelector('table'), [
+      { h: 'Pos', t: 'Posição', v: function (r) { return r.pos; }, cell: function (td, r) { td.textContent = r.pos; } },
+      { h: 'Time', s: 1, v: function (r) { return r.n; }, cell: teamCell },
+      { h: 'J', t: 'Jogos', v: function (r) { return r.j; } }, { h: 'PTS', t: 'Pontos', v: function (r) { return r.pts; } },
+      { h: 'VIT', t: 'Vitórias', v: function (r) { return r.v; } }, { h: 'EMP', t: 'Empates', v: function (r) { return r.e; } }, { h: 'DER', t: 'Derrotas', v: function (r) { return r.d; } },
+      { h: 'GP', t: 'Gols pró', v: function (r) { return r.gp; } }, { h: 'GC', t: 'Gols contra', v: function (r) { return r.gc; } },
+      { h: 'SG', t: 'Saldo de gols', v: function (r) { return r.sg; } },
+      { h: 'GP/J', t: 'Gols pró por jogo', v: function (r) { return rate(r.gp, r.j); }, f: f2 },
+      { h: 'GC/J', t: 'Gols contra por jogo', v: function (r) { return rate(r.gc, r.j); }, f: f2 },
+      { h: 'GT/J', t: 'Gols totais (pró + contra) por jogo', v: function (r) { return rate(r.gp + r.gc, r.j); }, f: f2 },
+      { h: 'APV', t: 'Aproveitamento', v: function (r) { return r.ap == null ? null : r.ap / 100; }, f: P },
+      { h: 'PTS/J', t: 'Pontos por jogo', v: function (r) { return rate(r.pts, r.j); }, f: f2 }
+    ], 0, true);
+    function render() {
+      var r = rg(), rows = standings(r[0], S.date != null ? r[1] : S.hi, S.mando, S.date);
+      rows.forEach(function (x, i) { x.pos = i + 1; }); tb.set(rows);
+    }
+    wireSeg(xsRoot, 'data-xseg', S, function (k) { if (k === 'turno') { S.hi = rg()[1]; fillRod(); } render(); });
+    sel.addEventListener('change', function () { if (sel.value === '') return; S.date = null; dIn.value = ''; dX.hidden = true; S.hi = parseInt(sel.value, 10); fillRod(); render(); });
+    dIn.addEventListener('change', function () { if (!dIn.value) { dX.click(); return; } S.date = Math.max(minD - 1, Math.min(maxD, isoDay(dIn.value))); dX.hidden = false; fillRod(); render(); });
+    dX.addEventListener('click', function () { S.date = null; dIn.value = ''; dX.hidden = true; S.hi = rg()[1]; fillRod(); render(); });
+    fillRod(); render();
+  })();
+
+  /* 2) desempenho em campo por time (turno e mando) */
+  var pfRoot = document.getElementById('pf');
+  if (pfRoot && DS.perf) (function () {
+    var S = { turno: 'todos', mando: 'todos' }, TI = { todos: 0, '1': 1, '2': 2 }, MI = { todos: 0, casa: 1, fora: 2 };
+    var f2 = F.d2, P = function (v) { return F.pct(v * 100); };
+    function pj(i, lab, t) { return { h: lab + '/J', t: t + ' por jogo', v: function (r) { return rate(r.x[i], r.j); }, f: f2 }; }
+    function tot(i, lab, t) { return { h: lab, t: t, v: function (r) { return r.x[i]; } }; }
+    var tb = xtable(pfRoot.querySelector('table'), [
+      { h: 'Time', s: 1, v: function (r) { return r.n; }, cell: teamCell },
+      { h: 'J', t: 'Jogos', v: function (r) { return r.j; } }, { h: 'GP', t: 'Gols pró', v: function (r) { return r.gp; } }, { h: 'GC', t: 'Gols contra', v: function (r) { return r.gc; } },
+      { h: 'PB', t: 'Posse de bola média', v: function (r) { return rate(r.pb, r.j) / 1; }, f: P },
+      tot(2, 'FIN', 'Finalizações'), tot(3, 'CHG', 'Chutes no gol'), tot(4, 'DFG', 'Defesas do goleiro'), tot(5, 'ESC', 'Escanteios'), tot(6, 'FAL', 'Faltas'), tot(7, 'DES', 'Desarmes'),
+      tot(8, 'CA', 'Cartões amarelos'), tot(9, 'CV', 'Cartões vermelhos'), tot(10, 'CT', 'Cartões (total)'),
+      pj(2, 'FIN', 'Finalizações'), pj(3, 'CHG', 'Chutes no gol'), pj(4, 'DFG', 'Defesas do goleiro'), pj(5, 'ESC', 'Escanteios'), pj(6, 'FAL', 'Faltas'), pj(7, 'DES', 'Desarmes'),
+      pj(8, 'CA', 'Cartões amarelos'), pj(9, 'CV', 'Cartões vermelhos'), pj(10, 'CT', 'Cartões'),
+      { h: 'PREC', t: 'Precisão: chutes no gol ÷ finalizações', v: function (r) { return rate(r.x[3], r.x[2]); }, f: P },
+      { h: 'CONV', t: 'Conversão: gols ÷ finalizações', v: function (r) { return rate(r.gp, r.x[2]); }, f: P },
+      { h: 'FIN/G', t: 'Finalizações por gol marcado', v: function (r) { return rate(r.x[2], r.gp); }, f: f2 },
+      { h: 'CHG/G', t: 'Chutes no gol por gol marcado', v: function (r) { return rate(r.x[3], r.gp); }, f: f2 }
+    ], 0, true);
+    function render() {
+      var r = trange(S.turno), st = standings(r[0], r[1], S.mando), by = {}; st.forEach(function (x) { by[x.s] = x; });
+      var rows = TEAMS.map(function (t) {
+        var a = DS.perf[t.s][TI[S.turno] * 3 + MI[S.mando]];
+        return { s: t.s, n: t.n, j: a[0], pb: a[1], x: a, gp: by[t.s].gp, gc: by[t.s].gc };
+      });
+      tb.set(rows);
+    }
+    wireSeg(pfRoot, 'data-xseg', S, render); render();
+  })();
+
+  /* 3) árbitros (turno, mando e mínimo de jogos) */
+  var arRoot = document.getElementById('ar');
+  if (arRoot && DS.arb) (function () {
+    var S = { turno: 'todos', mando: 'todos' }, TI = { todos: 0, '1': 1, '2': 2 }, f2 = F.d2;
+    var min = arRoot.querySelector('select');
+    function pick(r, i) { return S.mando === 'casa' ? r.m[i] : S.mando === 'fora' ? r.v[i] : r.m[i] + r.v[i]; }
+    function pj(k, lab, t) { return { h: lab + '/J', t: t + ' por jogo', v: function (r) { return rate(r[k], r.j); }, f: f2 }; }
+    var tb = xtable(arRoot.querySelector('table'), [
+      { h: 'Árbitro', s: 1, v: function (r) { return r.n; } },
+      { h: 'J', t: 'Jogos apitados', v: function (r) { return r.j; } },
+      { h: 'CA', t: 'Cartões amarelos', v: function (r) { return r.ca; } }, pj('ca', 'CA', 'Cartões amarelos'),
+      { h: 'CV', t: 'Cartões vermelhos', v: function (r) { return r.cv; } }, pj('cv', 'CV', 'Cartões vermelhos'),
+      { h: 'CT', t: 'Cartões (total)', v: function (r) { return r.ct; } }, pj('ct', 'CT', 'Cartões'),
+      { h: 'FAL', t: 'Faltas marcadas', v: function (r) { return r.fal; } }, pj('fal', 'FAL', 'Faltas'),
+      { h: 'FAL/C', t: 'Faltas por cartão', v: function (r) { return rate(r.fal, r.ct); }, f: f2 }
+    ], 1, false);
+    function render() {
+      var rows = DS.arb.map(function (a) {
+        var t = a.t[TI[S.turno]], r = { n: a.n, j: t[0], m: [t[1], t[3], t[5], t[7]], v: [t[2], t[4], t[6], t[8]] };
+        r.ca = pick(r, 0); r.cv = pick(r, 1); r.ct = pick(r, 2); r.fal = pick(r, 3); return r;
+      }).filter(function (r) { return r.j >= parseInt(min.value, 10); });
+      tb.set(rows);
+    }
+    min.addEventListener('change', render);
+    wireSeg(arRoot, 'data-xseg', S, render); render();
+  })();
+
   /* =====================  DADOS · PÚBLICO E RENDA  ===================== */
   var METRICS = [
     { k: 'publico', t: 'Público total', f: F.compact, full: F.int, d: 'Soma do público presente nos jogos.' },
