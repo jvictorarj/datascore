@@ -547,3 +547,28 @@ table.lt td.best{font-weight:800;color:var(--ink);background:#EEF8F4}
 .llg span{display:inline-flex;align-items:center}
 .llg i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:8px}
 .h2h.mm{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:4px 18px}
+/* ===== v8: jogos do confronto ===== */
+.gcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 2px rgba(27,31,59,.05);min-width:0}
+.gc-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.gcard .gm{font-size:12.5px;font-weight:600;color:var(--gray-ink)}
+.gcard .chip{font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;background:color-mix(in srgb,var(--c,#A9AEC8) 20%,#fff);color:var(--ink)}
+.gcard .chip.e{background:#ECEDF2;color:var(--text-2)}
+.gc-s{display:flex;align-items:center;justify-content:center;gap:14px;margin:16px 0 8px;flex-wrap:wrap;font-size:16px}
+.gc-s .tn{color:var(--text-2)}.gc-s .tn.w{font-weight:800;color:var(--ink)}
+.gc-s .sc.big{font-size:26px;font-weight:800;color:var(--ink);background:var(--off);border:1px solid var(--line);border-radius:10px;padding:2px 14px}
+.gc-m{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;font-size:12.5px;color:var(--text-2);margin-bottom:14px}
+.gc-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.gc-k>div{background:var(--off);border-radius:10px;padding:9px 12px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.gc-k .kl{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-ink)}
+.gc-k b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.gc-k em{font-style:normal;font-size:11px;color:var(--gray-ink)}
+.gc-sh{display:flex;justify-content:space-between;font-size:13px;color:var(--ink);margin-bottom:6px}
+.srow{display:grid;grid-template-columns:64px 1fr 64px;gap:2px 8px;align-items:center;margin-bottom:9px}
+.srow .lab{text-align:center;font-size:12px;color:var(--text-2)}
+.srow .l{text-align:left;font-size:13.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.srow .r{text-align:right;font-size:13.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.srow .sb{grid-column:1/-1;display:flex;gap:3px;height:8px;border-radius:999px;overflow:hidden}
+.srow .sb i{display:block;min-width:2px}
+@media(max-width:1000px){.gcards{grid-template-columns:1fr}}
+@media(max-width:480px){.gc-k{grid-template-columns:repeat(2,minmax(0,1fr))}}
