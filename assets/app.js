@@ -284,7 +284,7 @@
     sp[1].forEach(function (p) { tot += p[1]; });
     sp[1].forEach(function (p) { var a0 = acc / tot * 100; acc += p[1]; st.push(p[0] + ' ' + a0.toFixed(2) + '% ' + (acc / tot * 100).toFixed(2) + '%'); });
     var d = mk('span', 'tdot'); d.style.background = 'linear-gradient(' + (sp[0] === 'h' ? 'to bottom' : sp[0] === 'v' ? 'to right' : '135deg') + ',' + st.join(',') + ')';
-    if (sp[2]) d.style.boxShadow = 'inset 0 0 0 2.5px ' + sp[2];
+    if (sp[2]) d.style.background = 'linear-gradient(to bottom,transparent 0 24%,' + sp[2] + ' 24% 36%,transparent 36%),' + d.style.background;
     d.setAttribute('aria-hidden', 'true'); return d;
   }
 
@@ -541,22 +541,40 @@
       g.sort(function (x, y) { return x.r[4] - y.r[4]; });
       cmp.appendChild(mk('h3', 'bt h2', 'Confrontos diretos'));
       if (!g.length) { cmp.appendChild(mk('p', 'note', 'Ainda não se enfrentaram até a rodada ' + (i + 1) + '.')); return; }
-      var pa = 3 * wa + we, pb = 3 * wb + we, tot = 3 * g.length;
-      // cabo de guerra: pontos conquistados no confronto, do total em disputa
-      var tow = mk('div', 'tow'), lab = mk('div', 'tow-lab'), l1 = mk('span'), l2 = mk('span');
-      l1.appendChild(dot(A.id)); l1.appendChild(document.createTextNode(A.name + ' ')); l1.appendChild(mk('b', null, pa + (pa === 1 ? ' pt' : ' pts')));
-      l2.appendChild(mk('b', null, pb + (pb === 1 ? ' pt' : ' pts'))); l2.appendChild(document.createTextNode(' ' + B.name)); l2.appendChild(dot(B.id));
-      lab.appendChild(l1); lab.appendChild(l2); tow.appendChild(lab);
-      var bar = mk('div', 'tow-bar'); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', A.name + ' ' + pa + ' pontos, ' + B.name + ' ' + pb + ' pontos, de ' + tot + ' em disputa');
-      var sa = mk('span', 'a'), sb = mk('span', 'b'); sa.style.flexGrow = pa; sb.style.flexGrow = pb; sa.style.background = A.color; sb.style.background = B.color;
-      if (pa) bar.appendChild(sa); if (pb) bar.appendChild(sb); tow.appendChild(bar);
-      tow.appendChild(mk('div', 'tow-sub', tot + ' pontos em disputa (' + g.length + (g.length === 1 ? ' jogo' : ' jogos') + ') · ' + wa + (wa === 1 ? ' vitória' : ' vitórias') + ' de ' + A.name + ', ' + we + (we === 1 ? ' empate' : ' empates') + ', ' + wb + (wb === 1 ? ' vitória' : ' vitórias') + ' de ' + B.name + ' · gols ' + ga + ' x ' + gb));
+      var pa = 3 * wa + we, pb = 3 * wb + we, tot = 3 * g.length, lost = tot - pa - pb;
+      function pl(n, w) { return n + ' ' + (n === 1 ? w : w + 's'); }
+      var h2 = mk('div', 'duo');
+      function head(s, cls) { var c = mk('div', 'duo-h ' + cls); c.appendChild(dot(s.id)); c.appendChild(mk('b', null, s.name)); return c; }
+      h2.appendChild(head(A, 'l')); h2.appendChild(mk('div', 'duo-m', pl(g.length, 'jogo'))); h2.appendChild(head(B, 'r'));
+      [['Pontos', pa, pb, 1], ['Vitórias', wa, wb], ['Gols', ga, gb]].forEach(function (x) {
+        var va = mk('div', 'duo-v l' + (x[1] > x[2] ? ' win' : '')), vb = mk('div', 'duo-v r' + (x[2] > x[1] ? ' win' : ''));
+        va.textContent = x[1]; vb.textContent = x[2];
+        if (x[1] > x[2]) va.style.setProperty('--c', A.color); if (x[2] > x[1]) vb.style.setProperty('--c', B.color);
+        h2.appendChild(va); h2.appendChild(mk('div', 'duo-k', x[0])); h2.appendChild(vb);
+      });
+      h2.appendChild(mk('div', 'duo-v l mid', '')); h2.appendChild(mk('div', 'duo-k wide', pl(we, 'empate'))); h2.appendChild(mk('div', 'duo-v r mid', ''));
+      cmp.appendChild(h2);
+      // cabo de guerra: pontos de A, pontos de B e pontos que ninguém levou
+      var tow = mk('div', 'tow'), bar = mk('div', 'tow-bar'); bar.setAttribute('role', 'img');
+      bar.setAttribute('aria-label', A.name + ' ' + pa + ' pontos, ' + B.name + ' ' + pb + ' pontos, ' + lost + ' sem dono, de ' + tot + ' em disputa');
+      [[pa, A.color, 'a', A.name], [lost, '', 'x', 'Pontos perdidos'], [pb, B.color, 'b', B.name]].forEach(function (s) {
+        if (!s[0]) return; var sp = mk('span', s[2], String(s[0])); sp.style.flexGrow = s[0]; if (s[1]) sp.style.background = s[1]; sp.title = s[3] + ': ' + s[0]; bar.appendChild(sp);
+      });
+      tow.appendChild(bar);
+      var lg2 = mk('div', 'tow-leg');
+      [[A.color, A.name + ' · ' + pl(pa, 'ponto')], ['', 'Perdidos (ninguém levou) · ' + lost], [B.color, B.name + ' · ' + pl(pb, 'ponto')]].forEach(function (s) {
+        var it = mk('span'), sw = mk('i'); if (s[0]) sw.style.background = s[0]; else sw.className = 'x'; it.appendChild(sw); it.appendChild(document.createTextNode(s[1])); lg2.appendChild(it);
+      });
+      tow.appendChild(lg2); tow.appendChild(mk('div', 'tow-sub', tot + ' pontos em disputa'));
       cmp.appendChild(tow);
       var ul = mk('ul', 'h2h');
       g.forEach(function (x) {
-        var home = x.r[0] ? A.name : B.name, away = x.r[0] ? B.name : A.name, hg = x.r[0] ? x.r[1] : x.r[2], ag = x.r[0] ? x.r[2] : x.r[1];
-        var out = x.r[1] > x.r[2] ? A.name + ' venceu' : x.r[1] === x.r[2] ? 'Empate' : B.name + ' venceu';
-        ul.appendChild(mk('li', null, 'R' + x.rod + ' · ' + dm(x.r[4]) + ' · ' + home + ' ' + hg + ' x ' + ag + ' ' + away + ' · ' + out));
+        var home = x.r[0] ? A : B, away = x.r[0] ? B : A, hg = x.r[0] ? x.r[1] : x.r[2], ag = x.r[0] ? x.r[2] : x.r[1];
+        var win = x.r[1] > x.r[2] ? 'a' : x.r[1] === x.r[2] ? 'e' : 'b', li = mk('li');
+        li.appendChild(mk('span', 'gm', 'R' + x.rod + ' · ' + dm(x.r[4])));
+        var m = mk('span', 'gt'); m.appendChild(mk('span', 'tn' + (hg > ag ? ' w' : ''), home.name)); m.appendChild(mk('span', 'sc', hg + ' x ' + ag)); m.appendChild(mk('span', 'tn' + (ag > hg ? ' w' : ''), away.name)); li.appendChild(m);
+        var chip = mk('span', 'chip ' + win, win === 'e' ? 'Empate' : (win === 'a' ? A.name : B.name) + ' venceu'); if (win !== 'e') chip.style.setProperty('--c', win === 'a' ? A.color : B.color); li.appendChild(chip);
+        ul.appendChild(li);
       });
       cmp.appendChild(ul);
     }
@@ -683,6 +701,58 @@
   function trange(t) { return t === '2' ? [20, 38] : t === '1' ? [1, 19] : [1, 38]; }
   function rate(n, d) { return d ? n / d : null; }
 
+  /* 0) painel geral do campeonato */
+  var ovRoot = document.getElementById('ov');
+  if (ovRoot && TEAMS.length && DS.perf) (function () {
+    var hw = 0, dr = 0, aw = 0, gh = 0, ga = 0, n = 0, T = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    TEAMS.forEach(function (t) {
+      RES[t.s].forEach(function (r) { if (r[0] === 1) { n++; gh += r[1]; ga += r[2]; if (r[1] > r[2]) hw++; else if (r[1] === r[2]) dr++; else aw++; } });
+      DS.perf[t.s][0].forEach(function (v, i) { T[i] += v; });
+    });
+    var goals = gh + ga, ph = 3 * hw + dr, pa = 3 * aw + dr;
+    function sec(title) { var h = mk('div', 'ov-h', title); ovRoot.appendChild(h); var g = mk('div', 'ov-grid'); ovRoot.appendChild(g); return g; }
+    function card(g, label, val, sub) { var c = mk('div', 'ovc'); c.appendChild(mk('div', 'kl', label)); c.appendChild(mk('div', 'kv', val)); if (sub) c.appendChild(mk('div', 'ks', sub)); g.appendChild(c); }
+    var g1 = sec('O campeonato');
+    card(g1, 'Total de jogos', F.int(n)); card(g1, 'Total de gols', F.int(goals)); card(g1, 'Gols por rodada', F.d2(goals / 38), 'média das 38 rodadas'); card(g1, 'Gols por partida', F.d2(goals / n), 'somando os dois times');
+    var g2 = sec('Por partida · somando os dois times');
+    [['Finalizações', 2], ['Chutes a gol', 3], ['Escanteios', 5], ['Faltas', 6], ['Desarmes', 7], ['Cartões', 10], ['Cartões amarelos', 8], ['Cartões vermelhos', 9]].forEach(function (x) { card(g2, x[0], F.d2(T[x[1]] / n)); });
+    var g3 = sec('Eficiência');
+    card(g3, 'Precisão', F.pct(T[3] / T[2] * 100), 'chutes a gol ÷ finalizações'); card(g3, 'Conversão', F.pct(goals / T[2] * 100), 'gols ÷ finalizações');
+    card(g3, 'Finalizações por gol', F.d2(T[2] / goals), 'para fazer um gol'); card(g3, 'Chutes a gol por gol', F.d2(T[3] / goals), 'para fazer um gol');
+    /* mandante x visitante */
+    var h = mk('div', 'ov-h', 'Mandante x visitante'); ovRoot.appendChild(h);
+    var row = mk('div', 'mv'); ovRoot.appendChild(row);
+    function box(title) { var b = mk('div', 'mvb'); b.appendChild(mk('div', 'flabel', title)); row.appendChild(b); return b; }
+    function split(b, x, y, cx, cy) {
+      var bar = mk('div', 'sbar'), s1 = mk('span'), s2 = mk('span'); s1.style.flexGrow = x; s2.style.flexGrow = y; s1.style.background = cx; s2.style.background = cy; bar.appendChild(s1); bar.appendChild(s2); b.appendChild(bar);
+    }
+    // rosca
+    var d = box('Resultados dos jogos'), NSV = 'http://www.w3.org/2000/svg', R = 62, CI = 2 * Math.PI * R;
+    var parts = [['Vitórias do mandante', hw, C.green], ['Empates', dr, '#A9AEC8'], ['Vitórias do visitante', aw, C.blue]];
+    var svg = el('svg', { viewBox: '0 0 180 180', class: 'donut', role: 'img', 'aria-label': 'Vitórias do mandante, empates e vitórias do visitante' }, d), off = 0;
+    parts.forEach(function (p) {
+      var len = p[1] / n * CI; el('circle', { cx: 90, cy: 90, r: R, fill: 'none', stroke: p[2], 'stroke-width': 26, 'stroke-dasharray': (len - 2) + ' ' + (CI - len + 2), 'stroke-dashoffset': -off, transform: 'rotate(-90 90 90)' }, svg).appendChild(el('title', {})).textContent = p[0] + ': ' + p[1];
+      off += len;
+    });
+    var c1 = el('text', { x: 90, y: 88, 'text-anchor': 'middle', 'font-size': 26, 'font-weight': 800, fill: '#1B1F3B' }, svg); c1.textContent = n;
+    var c2 = el('text', { x: 90, y: 107, 'text-anchor': 'middle', 'font-size': 11, fill: '#6B7088' }, svg); c2.textContent = 'jogos';
+    var lg = mk('div', 'dleg'); parts.forEach(function (p) {
+      var s = mk('div'), i = mk('i'); i.style.background = p[2]; s.appendChild(i); s.appendChild(mk('span', null, p[0])); s.appendChild(mk('b', null, p[1] + ' · ' + F.pct(p[1] / n * 100))); lg.appendChild(s);
+    }); d.appendChild(lg);
+    // pontos
+    var p = box('Pontos do mandante x visitante');
+    var pr = mk('div', 'duel'); pr.innerHTML = ''; [['Mandante', ph, C.green], ['Visitante', pa, C.blue]].forEach(function (x, k) {
+      var s = mk('div', k ? 'r' : 'l'); s.appendChild(mk('div', 'lab', x[0])); s.appendChild(mk('div', 'big', F.int(x[1]))); s.appendChild(mk('div', 'pc', F.pct(x[1] / (ph + pa) * 100))); pr.appendChild(s);
+    }); p.appendChild(pr); split(p, ph, pa, C.green, C.blue);
+    p.appendChild(mk('div', 'sub', 'Mandante: ' + hw + ' vitórias × 3 + ' + dr + ' empates. Visitante: ' + aw + ' vitórias × 3 + ' + dr + ' empates.'));
+    // gols
+    var g = box('Gols do mandante x visitante');
+    var gr = mk('div', 'duel'); [['Mandante', gh, C.green], ['Visitante', ga, C.blue]].forEach(function (x, k) {
+      var s = mk('div', k ? 'r' : 'l'); s.appendChild(mk('div', 'lab', x[0])); s.appendChild(mk('div', 'big', F.int(x[1]))); s.appendChild(mk('div', 'pc', F.d2(x[1] / n) + ' por partida')); gr.appendChild(s);
+    }); g.appendChild(gr); split(g, gh, ga, C.green, C.blue);
+    g.appendChild(mk('div', 'sub', F.pct(gh / goals * 100) + ' dos gols saíram do mandante.'));
+  })();
+
   /* 1) classificação completa (rodada, data, turno, mando) */
   var xsRoot = document.getElementById('xs');
   if (xsRoot && TEAMS.length) (function () {
@@ -724,35 +794,50 @@
     fillRod(); render();
   })();
 
-  /* 2) desempenho em campo por time (turno e mando) */
+  /* 2) desempenho em campo por time, em grupos (turno e mando) */
   var pfRoot = document.getElementById('pf');
   if (pfRoot && DS.perf) (function () {
-    var S = { turno: 'todos', mando: 'todos' }, TI = { todos: 0, '1': 1, '2': 2 }, MI = { todos: 0, casa: 1, fora: 2 };
+    var S = { turno: 'todos', mando: 'todos', grupo: 'ataque' }, TI = { todos: 0, '1': 1, '2': 2 }, MI = { todos: 0, casa: 1, fora: 2 };
     var f2 = F.d2, P = function (v) { return F.pct(v * 100); };
-    function pj(i, lab, t) { return { h: lab + '/J', t: t + ' por jogo', v: function (r) { return rate(r.x[i], r.j); }, f: f2 }; }
-    function tot(i, lab, t) { return { h: lab, t: t, v: function (r) { return r.x[i]; } }; }
-    var tb = xtable(pfRoot.querySelector('table'), [
-      { h: 'Time', s: 1, v: function (r) { return r.n; }, cell: teamCell },
-      { h: 'J', t: 'Jogos', v: function (r) { return r.j; } }, { h: 'GP', t: 'Gols pró', v: function (r) { return r.gp; } }, { h: 'GC', t: 'Gols contra', v: function (r) { return r.gc; } },
-      { h: 'PB', t: 'Posse de bola média', v: function (r) { return rate(r.pb, r.j) / 1; }, f: P },
-      tot(2, 'FIN', 'Finalizações'), tot(3, 'CHG', 'Chutes no gol'), tot(4, 'DFG', 'Defesas do goleiro'), tot(5, 'ESC', 'Escanteios'), tot(6, 'FAL', 'Faltas'), tot(7, 'DES', 'Desarmes'),
-      tot(8, 'CA', 'Cartões amarelos'), tot(9, 'CV', 'Cartões vermelhos'), tot(10, 'CT', 'Cartões (total)'),
-      pj(2, 'FIN', 'Finalizações'), pj(3, 'CHG', 'Chutes no gol'), pj(4, 'DFG', 'Defesas do goleiro'), pj(5, 'ESC', 'Escanteios'), pj(6, 'FAL', 'Faltas'), pj(7, 'DES', 'Desarmes'),
-      pj(8, 'CA', 'Cartões amarelos'), pj(9, 'CV', 'Cartões vermelhos'), pj(10, 'CT', 'Cartões'),
-      { h: 'PREC', t: 'Precisão: chutes no gol ÷ finalizações', v: function (r) { return rate(r.x[3], r.x[2]); }, f: P },
-      { h: 'CONV', t: 'Conversão: gols ÷ finalizações', v: function (r) { return rate(r.gp, r.x[2]); }, f: P },
-      { h: 'FIN/G', t: 'Finalizações por gol marcado', v: function (r) { return rate(r.x[2], r.gp); }, f: f2 },
-      { h: 'CHG/G', t: 'Chutes no gol por gol marcado', v: function (r) { return rate(r.x[3], r.gp); }, f: f2 }
-    ], 0, true);
-    function render() {
+    var table = pfRoot.querySelector('table'), tb = null, rows = [];
+    /* i: 2 FIN, 3 CHG, 5 ESC, 6 FAL, 7 DES, 8 CA, 9 CV, 10 CT; o=1 usa os números do adversário */
+    function tot(i, lab, t, o) { return { h: lab, t: t, v: function (r) { return (o ? r.o : r.x)[i]; } }; }
+    function pj(i, lab, t, o) { return { h: lab + '/J', t: t + ' por jogo', v: function (r) { return rate((o ? r.o : r.x)[i], r.j); }, f: f2 }; }
+    var NAME = { h: 'Time', s: 1, v: function (r) { return r.n; }, cell: teamCell }, J = { h: 'J', t: 'Jogos', v: function (r) { return r.j; } };
+    var GROUPS = {
+      ataque: { def: 3, asc: false, cols: [NAME, J,
+        { h: 'PB', t: 'Posse de bola média', v: function (r) { return rate(r.x[1], r.j); }, f: P },
+        { h: 'GP', t: 'Gols pró', v: function (r) { return r.gp; } }, { h: 'GP/J', t: 'Gols pró por jogo', v: function (r) { return rate(r.gp, r.j); }, f: f2 },
+        tot(2, 'FIN', 'Finalizações realizadas'), pj(2, 'FIN', 'Finalizações'), tot(3, 'CHG', 'Chutes a gol realizados'), pj(3, 'CHG', 'Chutes a gol'), tot(5, 'ESC', 'Escanteios'), pj(5, 'ESC', 'Escanteios'),
+        { h: 'PREC', t: 'Precisão: chutes a gol ÷ finalizações', v: function (r) { return rate(r.x[3], r.x[2]); }, f: P },
+        { h: 'CONV', t: 'Conversão: gols ÷ finalizações', v: function (r) { return rate(r.gp, r.x[2]); }, f: P },
+        { h: 'FIN/G', t: 'Finalizações para fazer um gol', v: function (r) { return rate(r.x[2], r.gp); }, f: f2 },
+        { h: 'CHG/G', t: 'Chutes a gol para fazer um gol', v: function (r) { return rate(r.x[3], r.gp); }, f: f2 }] },
+      defesa: { def: 2, asc: true, cols: [NAME, J,
+        { h: 'GC', t: 'Gols contra', v: function (r) { return r.gc; } }, { h: 'GC/J', t: 'Gols contra por jogo', v: function (r) { return rate(r.gc, r.j); }, f: f2 },
+        tot(2, 'FIN', 'Finalizações cedidas', 1), pj(2, 'FIN', 'Finalizações cedidas', 1), tot(3, 'CHG', 'Chutes a gol cedidos', 1), pj(3, 'CHG', 'Chutes a gol cedidos', 1), tot(5, 'ESC', 'Escanteios cedidos', 1), pj(5, 'ESC', 'Escanteios cedidos', 1),
+        { h: 'PREC', t: 'Precisão dos adversários: chutes a gol ÷ finalizações', v: function (r) { return rate(r.o[3], r.o[2]); }, f: P },
+        { h: 'CONV', t: 'Conversão dos adversários: gols sofridos ÷ finalizações', v: function (r) { return rate(r.gc, r.o[2]); }, f: P },
+        { h: 'FIN/G', t: 'Finalizações cedidas para sofrer um gol', v: function (r) { return rate(r.o[2], r.gc); }, f: f2 },
+        { h: 'CHG/G', t: 'Chutes a gol cedidos para sofrer um gol', v: function (r) { return rate(r.o[3], r.gc); }, f: f2 }] },
+      disciplina: { def: 2, asc: false, cols: [NAME, J,
+        tot(6, 'FAL', 'Faltas cometidas'), pj(6, 'FAL', 'Faltas cometidas'), tot(7, 'DES', 'Desarmes'), pj(7, 'DES', 'Desarmes'),
+        tot(10, 'CT', 'Cartões (total)'), pj(10, 'CT', 'Cartões'), tot(8, 'CA', 'Cartões amarelos'), pj(8, 'CA', 'Cartões amarelos'), tot(9, 'CV', 'Cartões vermelhos'), pj(9, 'CV', 'Cartões vermelhos'),
+        { h: 'FAL/C', t: 'Faltas por cartão', v: function (r) { return rate(r.x[6], r.x[10]); }, f: f2 }] },
+      adversarios: { def: 2, asc: false, cols: [NAME, J,
+        tot(6, 'FAL', 'Faltas sofridas (cometidas pelos adversários)', 1), pj(6, 'FAL', 'Faltas sofridas', 1), tot(7, 'DES', 'Desarmes sofridos (feitos pelos adversários)', 1), pj(7, 'DES', 'Desarmes sofridos', 1),
+        tot(10, 'CT', 'Cartões dos adversários', 1), pj(10, 'CT', 'Cartões dos adversários', 1), tot(8, 'CA', 'Cartões amarelos dos adversários', 1), pj(8, 'CA', 'Cartões amarelos dos adversários', 1), tot(9, 'CV', 'Cartões vermelhos dos adversários', 1), pj(9, 'CV', 'Cartões vermelhos dos adversários', 1)] }
+    };
+    function build() { var g = GROUPS[S.grupo]; tb = xtable(table, g.cols, g.def, g.asc); tb.set(rows); }
+    function load() {
       var r = trange(S.turno), st = standings(r[0], r[1], S.mando), by = {}; st.forEach(function (x) { by[x.s] = x; });
-      var rows = TEAMS.map(function (t) {
-        var a = DS.perf[t.s][TI[S.turno] * 3 + MI[S.mando]];
-        return { s: t.s, n: t.n, j: a[0], pb: a[1], x: a, gp: by[t.s].gp, gc: by[t.s].gc };
+      rows = TEAMS.map(function (t) {
+        var k = TI[S.turno] * 3 + MI[S.mando], a = DS.perf[t.s][k];
+        return { s: t.s, n: t.n, j: a[0], x: a, o: DS.perfo[t.s][k], gp: by[t.s].gp, gc: by[t.s].gc };
       });
-      tb.set(rows);
     }
-    wireSeg(pfRoot, 'data-xseg', S, render); render();
+    wireSeg(pfRoot, 'data-xseg', S, function (k) { if (k === 'grupo') { load(); build(); } else { load(); tb.set(rows); } });
+    load(); build();
   })();
 
   /* 3) árbitros (turno, mando e mínimo de jogos) */
