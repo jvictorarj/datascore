@@ -684,3 +684,31 @@ h3.grp{font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:upperca
 .st-main table.st{height:100%}
 @media(max-width:1180px){.st-main table.st{height:auto}}
 #club-home{margin-top:26px}
+
+/* ===== ajustes 18h ===== */
+.ov-grid.c5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1180px){.ov-grid.c5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.ov-grid.c5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.perf{display:flex;align-items:center;gap:30px;margin:22px 0 0}
+.pf-ring{flex:none;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.pf-l{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);margin-top:4px}
+.pf-s{font-size:12px;color:var(--gray-ink)}
+.pf-bar{flex:1;min-width:0}
+.pf-bar .ov-bh{margin:0 0 8px}
+.pf-bar .tow-bar{margin-top:0}
+@media(max-width:600px){.perf{flex-direction:column;align-items:stretch;gap:16px}.pf-ring{align-self:center}}
+.rg5{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;margin-top:12px;align-items:stretch}
+@media(max-width:900px){.rg5{grid-template-columns:1fr}}
+.brow{margin-top:13px}
+.brow .bh{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--text-2)}
+.brow .bh b{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.brow .bt{height:9px;border-radius:999px;background:#ECEDF2;overflow:hidden;margin-top:6px}
+.brow .bt i{display:block;height:100%;border-radius:999px}
+.sub0{font-size:12.5px;color:var(--gray-ink);margin:6px 0 4px}
+.gtile{display:flex;align-items:center;gap:16px;background:var(--off);border-left:5px solid #A9AEC8;border-radius:12px;padding:16px 18px;margin-top:12px}
+.gtile .gn{font-size:40px;font-weight:800;color:var(--ink);line-height:1;min-width:48px;font-variant-numeric:tabular-nums}
+.gtile .gl{font-size:14px;font-weight:700;color:var(--ink)}
+.gtile .gs2{font-size:12.5px;color:var(--gray-ink);margin-top:2px}
+.grow .gs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px}
+.grow .gs .tnm.l{justify-content:flex-start}
+.grow .gs .tnm.r{justify-content:flex-end}

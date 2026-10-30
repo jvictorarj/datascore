@@ -362,8 +362,8 @@
         var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
         var tx;
         if (key === 'sg') tx = (x.sg > 0 ? '+' : '') + x.sg + ' · ' + x.gp + ' GP · ' + x.gc + ' GC';
-        else if (key === 'v') tx = x.v + (x.v === 1 ? ' vitória' : ' vitórias') + ' · ' + F.pct(x.v / x.j * 100);
-        else if (key === 'd') tx = x.d + (x.d === 1 ? ' derrota' : ' derrotas') + ' · ' + F.pct(x.d / x.j * 100);
+        else if (key === 'v') tx = x.v + ' V · ' + F.pct(x.v / x.j * 100);
+        else if (key === 'd') tx = x.d + ' D · ' + F.pct(x.d / x.j * 100);
         else tx = g1(x[key]) + ' · ' + F.d2(x[key] / x.j) + ' p/j';
         li.appendChild(mk('span', 'm', tx)); ol.appendChild(li);
       });
@@ -376,7 +376,7 @@
       arr.forEach(function (x, i) {
         var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
         li.appendChild(mk('span', 'm ap', F.pct(x.ap)));
-        li.appendChild(mk('span', 'm2', x.v + (x.v === 1 ? ' vit' : ' vit') + ' · ' + x.gp + ' GP · ' + x.gc + ' GC'));
+        li.appendChild(mk('span', 'm2', x.v + ' V · ' + x.gp + ' GP · ' + x.gc + ' GC'));
         ol.appendChild(li);
       });
     }
@@ -1006,6 +1006,7 @@
       { h: 'GP', t: 'Gols pró', v: function (r) { return r.o.gp; } }, { h: 'GC', t: 'Gols contra', v: function (r) { return r.o.gc; } }, { h: 'SG', t: 'Saldo de gols', v: function (r) { return r.o.sg; }, f: function (v) { return (v > 0 ? '+' : '') + v; } }];
     function load() {
       rows = TEAMS.map(function (t) { return { s: t.s, n: t.n, o: gsum(vsBand(gamesOf(t.s, S.turno, S.mando, fb.hi(), S.date), +S.faixa)) }; });
+      rows.sort(function (x, y) { return (y.o.ap == null ? -1 : y.o.ap) - (x.o.ap == null ? -1 : x.o.ap) || y.o.pts - x.o.pts || y.o.sg - x.o.sg || y.o.gp - x.o.gp || x.n.localeCompare(y.n, 'pt'); });
     }
     tb = xtable(table, cols, 6, false);
     fb = filterBar(bfRoot, S, function () { load(); tb.set(rows); });
@@ -1045,13 +1046,14 @@
       }); box.appendChild(ul); parent.appendChild(box);
     }
     /* gráfico: aproveitamento acumulado e média móvel (5 jogos) */
-    function apvChart(host, ser, games, tm) {
+    function apvChart(host, ser, games, tm, avg) {
       var INK = '#6B7088', GR = '#E6E8EF';
       var W = Math.max(host.clientWidth, 280), H = 240, m = { l: 40, r: 12, t: 12, b: 30 }, N = games.length;
       var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Aproveitamento de ' + tm.n + ' ao longo dos jogos: acumulado e média móvel de 5 jogos.' }, host);
       var pw = W - m.l - m.r, ph = H - m.t - m.b, sx = function (i) { return m.l + (N > 1 ? i / (N - 1) : 0) * pw; }, sy = function (v) { return m.t + (1 - v / 100) * ph; };
       [0, 25, 50, 75, 100].forEach(function (v) { el('line', { x1: m.l, x2: W - m.r, y1: sy(v), y2: sy(v), stroke: GR, 'stroke-width': 1 }, svg); text(svg, m.l - 8, sy(v), v + '%', { anchor: 'end', size: 10.5, base: 'central', fill: INK }); });
       [1, 10, 20, 30, 38].forEach(function (g) { if (g <= N) text(svg, sx(g - 1), H - 10, String(g), { anchor: 'middle', size: 10.5, fill: INK }); });
+      if (avg != null) { el('line', { x1: m.l, x2: W - m.r, y1: sy(avg), y2: sy(avg), stroke: '#B4B9CE', 'stroke-width': 1.5, 'stroke-dasharray': '5 4' }, svg); }
       ser.forEach(function (s) {
         var pts = []; s.v.forEach(function (v, i) { if (v != null) pts.push([+sx(i).toFixed(1), +sy(v).toFixed(1)]); });
         el('path', { d: smooth(pts), fill: 'none', stroke: s.color, 'stroke-width': 2.75, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
@@ -1152,7 +1154,6 @@
       var box = mk('div', 'mvb'); box.appendChild(mk('div', 'flabel', title));
       var t = mk('table', 'lt'), th = mk('thead'), trh = mk('tr'); ['Contra', 'J', 'V', 'E', 'D', 'PTS', 'APV', 'GP', 'GC', 'SG'].forEach(function (h) { trh.appendChild(mk('th', null, h)); }); th.appendChild(trh); t.appendChild(th);
       var tbd = mk('tbody'), rows = ks.map(function (k, q) { return { n: labels[q], o: gsum(vsBand(all, k)) }; });
-      rows.sort(function (x, y) { return (y.o.ap == null ? -1 : y.o.ap) - (x.o.ap == null ? -1 : x.o.ap) || y.o.pts - x.o.pts; });
       rows.forEach(function (b) {
         var o = b.o, tr = mk('tr');
         [b.n, o.j, o.v, o.e, o.d, o.pts, o.ap == null ? '—' : F.pct(o.ap * 100), o.gp, o.gc, (o.sg > 0 ? '+' : '') + o.sg].forEach(function (v, k) { tr.appendChild(mk('td', k === 0 ? 'rl' : k === 5 || k === 6 ? 'hl' : '', String(v))); }); tbd.appendChild(tr);
@@ -1207,7 +1208,7 @@
       var ul = mk('ol', 'top5'), L = all.slice().sort(function (x, y) { return fn(y.row) - fn(x.row); }).slice(0, 5);
       L.forEach(function (g, k) {
         var w = g.row, h = TEAMS[w[2]].s, aw = TEAMS[w[3]].s, li = mk('li'); li.appendChild(mk('span', 'tn', String(k + 1)));
-        var m = mk('span', 'tm'); m.appendChild(dot(h)); m.appendChild(mk('b', null, h)); m.appendChild(mk('em', null, 'x')); m.appendChild(dot(aw)); m.appendChild(mk('b', null, aw)); m.title = NM[h] + ' x ' + NM[aw] + ' · rodada ' + (g.i + 1); li.appendChild(m);
+        var m = mk('span', 'tm'); m.appendChild(dot(h)); m.appendChild(mk('b', null, h)); m.appendChild(mk('em', null, 'x')); m.appendChild(mk('b', null, aw)); m.appendChild(dot(aw)); m.title = NM[h] + ' x ' + NM[aw] + ' · rodada ' + (g.i + 1); li.appendChild(m);
         li.appendChild(mk('span', 'tv', fmt(fn(w)))); ul.appendChild(li);
       }); box.appendChild(ul); parent.appendChild(box);
     }
@@ -1255,16 +1256,16 @@
       var head = mk('div', 'cl-head'), bd = dot(s); bd.className += ' xl'; head.appendChild(bd);
       var ht = mk('div'); ht.appendChild(mk('h2', null, tm.n)); ht.appendChild(mk('p', null, [info.uf, info.estadio].filter(Boolean).join(' · ') + ' · Brasileirão Série A 2025')); head.appendChild(ht); clRoot.appendChild(head);
       var gm = champ.goals / 380;
-      var ovg = mk('div', 'ov-grid c6'); clRoot.appendChild(ovg);
-      [['Pontos', String(O.pts), pos + 'º lugar'], ['Aproveitamento', null, O.j + ' jogos', O.ap * 100],
-        ['Gols pró', F.int(O.gp), F.d2(O.gp / O.j) + ' por jogo · ' + F.pct(O.gp / champ.goals * 100) + ' do campeonato'], ['Gols contra', F.int(O.gc), F.d2(O.gc / O.j) + ' por jogo · ' + F.pct(O.gc / champ.goals * 100) + ' do campeonato'],
+      var ovg = mk('div', 'ov-grid c5'); clRoot.appendChild(ovg);
+      [['Pontos', String(O.pts), pos + 'º lugar'], ['Gols pró', F.int(O.gp), F.d2(O.gp / O.j) + ' por jogo · ' + F.pct(O.gp / champ.goals * 100) + ' do campeonato'], ['Gols contra', F.int(O.gc), F.d2(O.gc / O.j) + ' por jogo · ' + F.pct(O.gc / champ.goals * 100) + ' do campeonato'],
         ['Gols nas partidas', F.int(O.gp + O.gc), F.pct((O.gp + O.gc) / champ.goals * 100) + ' dos gols do campeonato'], ['Gols por partida', F.d2((O.gp + O.gc) / O.j), 'campeonato: ' + F.d2(gm)]].forEach(function (x) {
         var c = mk('div', 'ovc'); c.appendChild(mk('div', 'kl', x[0]));
         if (x[3] != null) { var rw = mk('div', 'ringw'); rw.appendChild(ringEl(x[3], 92, '#298463', x[0])); c.appendChild(rw); } else c.appendChild(mk('div', 'kv', x[1]));
         c.appendChild(mk('div', 'ks', x[2])); ovg.appendChild(c);
       });
-      var dh = mk('div', 'ov-bh', 'Desempenho'); clRoot.appendChild(dh);
-      resBar(clRoot, O);
+      var pf = mk('div', 'perf'), prg = mk('div', 'pf-ring'), pbr = mk('div', 'pf-bar');
+      prg.appendChild(ringEl(O.ap * 100, 118, '#298463', 'Aproveitamento')); prg.appendChild(mk('div', 'pf-l', 'Aproveitamento')); prg.appendChild(mk('div', 'pf-s', O.j + ' jogos'));
+      pbr.appendChild(mk('div', 'ov-bh', 'Desempenho')); resBar(pbr, O); pf.appendChild(prg); pf.appendChild(pbr); clRoot.appendChild(pf);
       var t5 = mk('div', 'mv four'); clRoot.appendChild(t5);
       var allG = all.filter(function (g) { return g.row; });
       top5(t5, 'Top 5 · mais público', allG, function (w) { return w[9]; }, F.int);
@@ -1294,16 +1295,23 @@
       });
       var s1 = [{ name: 'Acumulado', color: '#298463', v: acc }], s2 = [{ name: 'Últimos 5 jogos', color: '#2D3776', v: mov }];
       chartCard(g3, 'Posição por rodada', 'Classificação após cada rodada.', null, function (host) { posChart(host, pp, ppts, tm); });
-      chartCard(g3, 'Aproveitamento acumulado', 'Jogo a jogo, em ordem cronológica.', null, function (host) { apvChart(host, s1, chrono, tm); });
-      chartCard(g3, 'Aproveitamento nos últimos 5 jogos', 'Começa no 5º jogo.', null, function (host) { apvChart(host, s2, chrono, tm); });
+      chartCard(g3, 'Aproveitamento acumulado', 'Tracejado: média do clube (' + F.pct(O.ap * 100) + ').', null, function (host) { apvChart(host, s1, chrono, tm, O.ap * 100); });
+      chartCard(g3, 'Aproveitamento nos últimos 5 jogos', 'Começa no 5º jogo. Tracejado: média do clube (' + F.pct(O.ap * 100) + ').', null, function (host) { apvChart(host, s2, chrono, tm, O.ap * 100); });
       /* contra faixas da tabela */
       var s4 = sec('Desempenho contra faixas da tabela', 'Vale a posição do adversário antes da partida; a rodada 1 fica de fora.'), r4 = mk('div', 'mv two'); s4.appendChild(r4);
       bandTable(r4, 'G4 e Z4', all, [0, 1], ['G4', 'Z4']); bandTable(r4, 'Posições 1–10 e 11–20', all, [2, 3], ['1 a 10', '11 a 20']);
       /* resultados e gols */
       var s5 = sec('Resultados e gols');
-      cards(s5, [['Sem gols (0 x 0)', O.z, pct(O.z, O.j)], ['Sem sofrer gols', O.cs, pct(O.cs, O.j) + ' · clean sheets'], ['Marcou', O.sc, pct(O.sc, O.j)], ['Sofreu', O.cc, pct(O.cc, O.j)],
-        ['Marcou sem sofrer', O.scn, pct(O.scn, O.j)], ['Sofreu sem marcar', O.ccn, pct(O.ccn, O.j)], ['Ambas marcaram', O.both, pct(O.both, O.j)],
-        ['Vitórias por goleada', O.bw, '3 ou mais gols de diferença'], ['Derrotas por goleada', O.bl, '3 ou mais gols de diferença']]);
+      var rg5 = mk('div', 'rg5'); s5.appendChild(rg5);
+      var lc = mk('div', 'mvb'); lc.appendChild(mk('div', 'flabel', 'Em quantos jogos o clube…'));
+      [['Marcou gol', O.sc, C.green], ['Marcou sem sofrer gol', O.scn, C.green], ['Sofreu gol', O.cc, C.blue], ['Sofreu sem marcar gol', O.ccn, C.blue], ['Ambos marcaram', O.both, '#A9AEC8'], ['Não sofreu gol (clean sheet)', O.cs, C.green], ['Terminou 0 x 0', O.z, '#A9AEC8']].forEach(function (x) {
+        var r = mk('div', 'brow'), hd = mk('div', 'bh'); hd.appendChild(mk('span', null, x[0])); hd.appendChild(mk('b', null, x[1] + ' · ' + pct(x[1], O.j))); r.appendChild(hd);
+        var tr = mk('div', 'bt'), fl = mk('i'); fl.style.width = (O.j ? x[1] / O.j * 100 : 0) + '%'; fl.style.background = x[2]; tr.appendChild(fl); r.appendChild(tr); lc.appendChild(r);
+      }); rg5.appendChild(lc);
+      var rc = mk('div', 'mvb'); rc.appendChild(mk('div', 'flabel', 'Goleadas')); rc.appendChild(mk('p', 'sub0', 'Jogos decididos por 3 ou mais gols de diferença.'));
+      [['Vitórias por goleada', O.bw, C.green], ['Derrotas por goleada', O.bl, '#D2484F']].forEach(function (x) {
+        var t = mk('div', 'gtile'); t.style.borderLeftColor = x[2]; t.appendChild(mk('div', 'gn', String(x[1]))); var tt = mk('div'); tt.appendChild(mk('div', 'gl', x[0])); tt.appendChild(mk('div', 'gs2', pct(x[1], O.j) + ' dos jogos')); t.appendChild(tt); rc.appendChild(t);
+      }); rg5.appendChild(rc);
       var dr = mk('div', 'mv two'); s5.appendChild(dr);
       dist(dr, 'Gols marcados por partida', O.m, O.j, C.green); dist(dr, 'Gols sofridos por partida', O.s, O.j, C.blue);
       /* público e renda */
@@ -1324,7 +1332,7 @@
         if (mq.matches) b.after(curCard); else { panel.textContent = ''; panel.appendChild(curCard); }
       }
       var first = null;
-      all.slice().sort(function (x, y) { return x.i - y.i; }).forEach(function (g) {
+      all.slice().sort(function (x, y) { return y.r[4] - x.r[4] || y.i - x.i; }).forEach(function (g) {
         var b = mk('button', 'grow ' + resOf(g.r)); b.type = 'button'; b.setAttribute('aria-expanded', 'false');
         b.appendChild(mk('span', 'gr', 'R' + (g.i + 1))); b.appendChild(mk('span', 'gd', dm(g.r[4]))); b.appendChild(scoreLine(g, s, 'gs')); b.appendChild(resChip(g.r));
         b.addEventListener('click', function () { pick(b, g); }); list.appendChild(b); if (!first) first = [b, g];
