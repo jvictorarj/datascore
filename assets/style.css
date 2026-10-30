@@ -537,3 +537,13 @@ table.lt td.best{font-weight:800;color:var(--ink);background:#EEF8F4}
 .rbar span{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;margin:4px 0 10px}
 @media(max-width:900px){.mv.two{grid-template-columns:1fr}.mvb{max-width:none}}
+/* ===== v7 ===== */
+.sel option,.sel.dk option{background:#1B1F3B;color:#fff}
+.sel:not(.dk) option{background:#fff;color:#303030}
+.lcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px 16px;box-shadow:0 1px 2px rgba(27,31,59,.05);margin-top:14px}
+.lcard h3{font-size:16px;font-weight:800;color:var(--ink);margin:0 0 2px}
+.lcard .cs{font-size:13px;color:var(--text-2);margin:0 0 10px}
+.llg{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--text);margin:0 0 6px}
+.llg span{display:inline-flex;align-items:center}
+.llg i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:8px}
+.h2h.mm{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:4px 18px}
