@@ -347,7 +347,7 @@
     }
     function td(cls, txt) { return mk('td', cls, txt); }
     function g1(n) { return n + (n === 1 ? ' gol' : ' gols'); }
-    function lists(rows) {
+    function lists(rows, hrows, arows) {
       var pl = rows.filter(function (x) { return x.j > 0; }), nm = function (a, b) { return a.n.localeCompare(b.n, 'pt'); };
       var atk = pl.slice().sort(function (a, b) { return b.gp - a.gp || b.gp / b.j - a.gp / a.j || a.gc - b.gc || nm(a, b); }).slice(0, 3);
       var def = pl.slice().sort(function (a, b) { return a.gc - b.gc || a.gc / a.j - b.gc / b.j || b.gp - a.gp || nm(a, b); }).slice(0, 3);
@@ -359,9 +359,20 @@
         });
       }
       put('st-atk', atk, 'gp'); put('st-def', def, 'gc');
+      function venue(id, src) {
+        var ol = document.getElementById(id); ol.textContent = '';
+        src.filter(function (x) { return x.j > 0; }).sort(function (a, b) { return b.ap - a.ap || b.pts - a.pts || b.v - a.v || b.sg - a.sg || b.gp - a.gp || nm(a, b); }).slice(0, 3).forEach(function (x, i) {
+          var li = mk('li'); li.appendChild(mk('span', 'rk', String(i + 1))); li.appendChild(dot(x.s)); li.appendChild(mk('b', null, x.n));
+          li.appendChild(mk('span', 'm ap', F.pct(x.ap)));
+          li.appendChild(mk('span', 'm2', x.j + (x.j === 1 ? ' jogo' : ' jogos') + ' · ' + x.v + (x.v === 1 ? ' vitória' : ' vitórias') + ' · ' + x.gp + ' GP · ' + x.gc + ' GC'));
+          ol.appendChild(li);
+        });
+      }
+      venue('st-home', hrows); venue('st-away', arows);
     }
     function render() {
       var r = range(), hi = S.date != null ? r[1] : S.hi, cut = S.date, rows = standings(r[0], hi, S.mando, cut), zones = S.mando === 'todos';
+      var hrows = S.mando === 'casa' ? rows : standings(r[0], hi, 'casa', cut), arows = S.mando === 'fora' ? rows : standings(r[0], hi, 'fora', cut);
       body.textContent = '';
       rows.forEach(function (x, i) {
         var tr = mk('tr', zones ? (i < 4 ? 'g4' : i >= 16 ? 'z4' : '') : '');
@@ -374,7 +385,7 @@
         body.appendChild(tr);
       });
       zleg.querySelectorAll('span:not(.fleg)').forEach(function (s) { s.hidden = !zones; });
-      lists(rows);
+      lists(rows, hrows, arows);
     }
     document.querySelectorAll('[data-seg]').forEach(function (g) {
       var key = g.getAttribute('data-seg');
@@ -482,17 +493,17 @@
       if (ser.length < 2) { cmp.hidden = true; cmp.textContent = ''; return; }
       cmp.hidden = false; cmp.textContent = '';
       var A = ser[0], B = ser[1], rows = ROW[i];
-      cmp.appendChild(mk('h4', null, 'Comparação após a rodada ' + (i + 1)));
-      var t = mk('table', 'cmpt'), th = mk('thead'), trh = mk('tr');
-      ['Time', 'Pos', 'P', 'J', 'V', 'E', 'D', 'GP', 'GC', 'SG', '%'].forEach(function (c) { trh.appendChild(mk('th', null, c)); });
+      cmp.appendChild(mk('h3', 'bt', 'Comparação após a rodada ' + (i + 1)));
+      var t = mk('table', 'lt'), th = mk('thead'), trh = mk('tr');
+      ['Time', 'P', 'J', 'V', 'E', 'D', 'GP', 'GC', 'SG', '%'].forEach(function (c) { trh.appendChild(mk('th', null, c)); });
       th.appendChild(trh); t.appendChild(th); var tb = mk('tbody');
-      [A, B].forEach(function (s) {
-        var pos = POS[s.id][i], x = rows[pos - 1], tr = mk('tr'), c0 = mk('td');
-        var sw = mk('i', 'sw'); sw.style.background = s.color; c0.appendChild(sw); c0.appendChild(dot(s.id)); c0.appendChild(document.createTextNode(s.name)); tr.appendChild(c0);
-        [pos + 'º', x.pts, x.j, x.v, x.e, x.d, x.gp, x.gc, (x.sg > 0 ? '+' : '') + x.sg, F.pct(x.ap)].forEach(function (v, k) { tr.appendChild(mk('td', k === 1 ? 'p' : '', String(v))); });
+      [A, B].forEach(function (s, n) {
+        var pos = POS[s.id][i], x = rows[pos - 1], tr = mk('tr', n ? 'mb' : 'ma'), c0 = mk('td');
+        c0.appendChild(mk('span', 'pos', pos + 'º')); c0.appendChild(dot(s.id)); c0.appendChild(document.createTextNode(s.name)); tr.appendChild(c0);
+        [x.pts, x.j, x.v, x.e, x.d, x.gp, x.gc, (x.sg > 0 ? '+' : '') + x.sg, F.pct(x.ap)].forEach(function (v, k) { tr.appendChild(mk('td', k === 0 ? 'p' : '', String(v))); });
         tb.appendChild(tr);
       });
-      t.appendChild(tb); var sc = mk('div', 'cmp-scroll'); sc.appendChild(t); cmp.appendChild(sc);
+      t.appendChild(tb); var box = mk('div', 'tbl-box'), sc = mk('div', 'tbl-scroll'); sc.appendChild(t); box.appendChild(sc); cmp.appendChild(box);
       // confrontos diretos
       var g = [], wa = 0, we = 0, wb = 0, ga = 0, gb = 0, oi = -1;
       TEAMS.forEach(function (tt, k) { if (tt.s === B.id) oi = k; });
@@ -501,9 +512,19 @@
         if (r[3] === oi) { g.push({ rod: k + 1, r: r }); ga += r[1]; gb += r[2]; if (r[1] > r[2]) wa++; else if (r[1] === r[2]) we++; else wb++; }
       }
       g.sort(function (x, y) { return x.r[4] - y.r[4]; });
-      cmp.appendChild(mk('h4', null, 'Confrontos diretos'));
-      if (!g.length) { cmp.appendChild(mk('p', 'cf', 'Ainda não se enfrentaram até a rodada ' + (i + 1) + '.')); return; }
-      cmp.appendChild(mk('p', 'h2h-sum', A.name + ' ' + wa + (wa === 1 ? ' vitória' : ' vitórias') + ' · ' + we + (we === 1 ? ' empate' : ' empates') + ' · ' + B.name + ' ' + wb + (wb === 1 ? ' vitória' : ' vitórias') + ' · gols ' + ga + ' x ' + gb));
+      cmp.appendChild(mk('h3', 'bt h2', 'Confrontos diretos'));
+      if (!g.length) { cmp.appendChild(mk('p', 'note', 'Ainda não se enfrentaram até a rodada ' + (i + 1) + '.')); return; }
+      var pa = 3 * wa + we, pb = 3 * wb + we, tot = 3 * g.length;
+      // cabo de guerra: pontos conquistados no confronto, do total em disputa
+      var tow = mk('div', 'tow'), lab = mk('div', 'tow-lab'), l1 = mk('span'), l2 = mk('span');
+      l1.appendChild(dot(A.id)); l1.appendChild(document.createTextNode(A.name + ' ')); l1.appendChild(mk('b', null, pa + (pa === 1 ? ' pt' : ' pts')));
+      l2.appendChild(mk('b', null, pb + (pb === 1 ? ' pt' : ' pts'))); l2.appendChild(document.createTextNode(' ' + B.name)); l2.appendChild(dot(B.id));
+      lab.appendChild(l1); lab.appendChild(l2); tow.appendChild(lab);
+      var bar = mk('div', 'tow-bar'); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', A.name + ' ' + pa + ' pontos, ' + B.name + ' ' + pb + ' pontos, de ' + tot + ' em disputa');
+      var sa = mk('span', 'a'), sb = mk('span', 'b'); sa.style.flexGrow = pa; sb.style.flexGrow = pb; sa.style.background = A.color; sb.style.background = B.color;
+      if (pa) bar.appendChild(sa); if (pb) bar.appendChild(sb); tow.appendChild(bar);
+      tow.appendChild(mk('div', 'tow-sub', tot + ' pontos em disputa (' + g.length + (g.length === 1 ? ' jogo' : ' jogos') + ') · ' + wa + (wa === 1 ? ' vitória' : ' vitórias') + ' de ' + A.name + ', ' + we + (we === 1 ? ' empate' : ' empates') + ', ' + wb + (wb === 1 ? ' vitória' : ' vitórias') + ' de ' + B.name + ' · gols ' + ga + ' x ' + gb));
+      cmp.appendChild(tow);
       var ul = mk('ul', 'h2h');
       g.forEach(function (x) {
         var home = x.r[0] ? A.name : B.name, away = x.r[0] ? B.name : A.name, hg = x.r[0] ? x.r[1] : x.r[2], ag = x.r[0] ? x.r[2] : x.r[1];
