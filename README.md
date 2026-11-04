@@ -7,7 +7,9 @@ Site estático do projeto **Data Score** — inteligência de dados do futebol b
 ## O que este repositório contém
 
 - `index.html`, `stats.html`, `renda.html`, `clube.html`, `sobre.html`, `contato.html`, `metodologia.html` — páginas do site
-- `assets/style.css`, `assets/app.js` — estilo, classificação e gráficos (SVG, sem dependências)
+- `ibf.html`, `estados.html`, `financeiro.html` — área **Análises**: Índice de Impacto na Bilheteria (IBF), mapa do Brasil por estado e custos e lucro
+- `assets/style.css`, `assets/app.js`, `assets/charts.js`, `assets/analises.js` — estilo, classificação e gráficos (SVG, sem dependências)
+- `assets/analises-data.js` — resultado do IBF (IBI, Z, T) por clube e o mapa do Brasil (@svg-maps/brazil, CC BY 4.0)
 - `assets/logo.png`, `assets/favicon.png` — identidade visual
 - `assets/data.js` — dados da temporada 2025: jogo a jogo (placar, data, estádio, árbitro, público, renda e estatísticas de cada equipe) e agregados por estado, estádio e clube
 
