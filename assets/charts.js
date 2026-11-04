@@ -71,8 +71,29 @@
     el('path', { d: smooth(pts), fill: 'none', stroke: o.lineColor || '#15AD76', 'stroke-width': 2.75, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'pointer-events': 'none' }, svg);
     line.forEach(function (v, i) { el('circle', { cx: cx(i), cy: sy(v), r: 3.4, fill: o.lineColor || '#15AD76', stroke: '#fff', 'stroke-width': 1.5, 'pointer-events': 'none' }, svg); tx(svg, cx(i), sy(v) - 9, fmt(v), { anchor: 'middle', size: 10.5, weight: 700, fill: INK }); });
   }
+
+  /* barras por temporada. vals pode ter null (sem dados). o: fmt, hi (índice destacado), partial (índices parciais), h, zero */
+  function barChart(host, labels, vals, o) {
+    o = o || {}; host.textContent = '';
+    var fmt = o.fmt || String, W = Math.max(host.clientWidth, 260), H = o.h || 230, m = { l: 14, r: 14, t: 28, b: 30 }, N = labels.length;
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H, role: 'img', 'aria-label': o.aria || 'Gráfico de barras por temporada' }, host);
+    var vv = vals.filter(function (v) { return v != null; }), mx = (vv.length ? Math.max.apply(null, vv) : 1) * 1.18 || 1, pw = W - m.l - m.r, ph = H - m.t - m.b, band = pw / N, bw = Math.min(54, band * .56);
+    var cx = function (i) { return m.l + band * (i + .5); }, sy = function (v) { return m.t + (1 - v / mx) * ph; };
+    el('line', { x1: m.l, x2: W - m.r, y1: m.t + ph, y2: m.t + ph, stroke: '#C9CDDB', 'stroke-width': 1 }, svg);
+    labels.forEach(function (l, i) {
+      tx(svg, cx(i), H - 9, String(l) + ((o.partial || []).indexOf(i) >= 0 ? '*' : ''), { anchor: 'middle', size: 11, weight: i === o.hi ? 800 : 600, fill: i === o.hi ? INK : MUTE });
+      var v = vals[i];
+      if (v == null) { el('rect', { x: cx(i) - bw / 2, y: m.t + ph - 28, width: bw, height: 28, rx: 4, fill: 'none', stroke: '#C9CDDB', 'stroke-dasharray': '4 3' }, svg); tx(svg, cx(i), m.t + ph - 11, 'em breve', { anchor: 'middle', size: 9.5, fill: '#9AA0BC' }); return; }
+      var y = sy(v), r = el('rect', { x: cx(i) - bw / 2, y: y, width: bw, height: Math.max(2, m.t + ph - y), rx: 4, fill: i === o.hi ? (o.hiColor || '#15AD76') : (o.color || '#2D3776'), 'fill-opacity': i === o.hi ? 1 : .85 }, svg);
+      if ((o.partial || []).indexOf(i) >= 0) r.setAttribute('fill-opacity', .6);
+      tx(svg, cx(i), y - 8, fmt(v), { anchor: 'middle', size: 11, weight: 700, fill: INK });
+      var hit = el('rect', { x: cx(i) - band / 2, y: m.t, width: band, height: ph, fill: 'transparent', tabindex: 0, 'aria-label': labels[i] + ': ' + fmt(v) }, svg);
+      var show = function (e) { tip(e, hit, fmt(v), String(labels[i]), (o.sub && o.sub[i]) || ''); };
+      hit.addEventListener('pointermove', show); hit.addEventListener('focus', show); hit.addEventListener('pointerleave', hide); hit.addEventListener('blur', hide);
+    });
+  }
   function redraw(host, fn) {
     fn(); if ('ResizeObserver' in window) { var lw = host.clientWidth; new ResizeObserver(function () { if (Math.abs(host.clientWidth - lw) > 4) { lw = host.clientWidth; fn(); } }).observe(host); }
   }
-  window.DSC = { lineChart: lineChart, comboChart: comboChart, smooth: smooth, redraw: redraw };
+  window.DSC = { lineChart: lineChart, comboChart: comboChart, barChart: barChart, smooth: smooth, redraw: redraw };
 })();

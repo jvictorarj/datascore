@@ -809,3 +809,29 @@ table.an-dec th:first-child,table.an-dec td:first-child{text-align:center;width:
 table.an-dec th:last-child,table.an-dec td:last-child{text-align:center}
 ol.barlist .bn:empty{display:none}
 ol.barlist li:has(.bn:empty){grid-template-columns:minmax(90px,150px) minmax(0,1fr) auto}
+
+/* ===== temporadas (multi-ano) ===== */
+.yearbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+.yearbar .yl{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#DFDFDF}
+.yseg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.yseg button{font:inherit;font-weight:800;font-size:15px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:8px 18px;cursor:pointer;display:inline-flex;align-items:baseline;gap:6px;transition:background .15s}
+.yseg button:hover:not(.off){background:rgba(255,255,255,.18)}
+.yseg button.on{background:var(--green);border-color:var(--green);color:var(--ink)}
+.yseg button small{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.8}
+.yseg button.off{opacity:.45;cursor:not-allowed;border-style:dashed}
+.partial{background:#FFF6DD;border:1px solid #F0DDA0;color:#6B5200;border-radius:10px;padding:10px 14px;font-size:13px;margin:0 0 16px;max-width:760px}
+.kpi .dl{font-size:12px;color:var(--gray-ink)}
+.kpi .dl b.up{color:#15805a}.kpi .dl b.dn{color:#D2484F}
+.news-grid,.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.news,.tile{display:block;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;color:inherit;text-decoration:none;box-shadow:0 1px 2px rgba(27,31,59,.05);transition:transform .15s,box-shadow .15s}
+.news:hover,.tile:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(27,31,59,.1)}
+.news .nk{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--green-ink)}
+.news .nv{font-size:28px;font-weight:800;color:var(--ink);margin:6px 0 4px;letter-spacing:-.02em}
+.news .nt{font-size:14px;color:var(--text-2);margin:0 0 10px;line-height:1.45}
+.news .nl{font-size:13px;font-weight:700;color:var(--green-ink)}
+.tile b{display:block;font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px}.tile span{font-size:14px;color:var(--text-2)}
+.mv.three .lcard{margin-top:0}
+.cn{display:inline-flex;align-items:center;gap:8px}.cn em{font-style:normal;font-weight:800;margin:0 2px}
+.page-head.dark #yearbar{margin-top:20px}
+@media(max-width:900px){.news-grid,.tiles{grid-template-columns:1fr 1fr}#home-kpis{grid-template-columns:1fr 1fr!important}}
+@media(max-width:560px){.news-grid,.tiles{grid-template-columns:1fr}.yseg button{padding:7px 13px;font-size:14px}}
