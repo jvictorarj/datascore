@@ -93,6 +93,7 @@
     return out;
   }
   function ibf(y) { return ((Y.ibf || {})[String(y)]) || []; }
+  function ibfa(y) { return ((Y.ibfa || {})[String(y)]) || []; }
 
   /* ---------- ano selecionado ---------- */
   var avail = (Y.anos || []).filter(has), def = (function () { var c = avail.filter(function (y) { return !isPartial(y); }); return String(c.length ? c[c.length - 1] : avail[avail.length - 1]); })();
@@ -199,7 +200,7 @@
     if (!isPartial(y)) return null; var p = mk('p', 'partial', 'Temporada ' + y + ' em andamento: os números de público e renda valem até a rodada ' + lastFull(y) + '.'); parent.appendChild(p); return p;
   }
   window.L = { Y: Y, BR: BR, COL: COL, F: F, mk: mk, el: el, mean: mean, sum: sum, dot: dot, showTip: showTip, hideTip: hideTip, REG: REG, REGS: REGS, UFN: UFN, nm: nm, cuf: cuf,
-    games: games, pubGames: pubGames, has: has, lastFull: lastFull, isPartial: isPartial, agg: agg, pts: pts, groupBy: groupBy, clubs: clubs, ibf: ibf, avail: avail,
+    games: games, pubGames: pubGames, has: has, lastFull: lastFull, isPartial: isPartial, agg: agg, pts: pts, groupBy: groupBy, clubs: clubs, ibf: ibf, ibfa: ibfa, avail: avail,
     year: function () { return cur; }, setYear: setYear, onYear: function (f) { subs.push(f); }, yearBar: yearBar,
     seg: seg, selectBox: selectBox, onResize: onResize, box: box, clubCell: clubCell, div: div, ramp: ramp, tbl: tbl, barList: barList, legend: legend, legendBar: legendBar, brMap: brMap, scatter: scatter, partialNote: partialNote };
 })();

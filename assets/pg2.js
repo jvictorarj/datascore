@@ -92,9 +92,12 @@
 
   /* ===================== IBF ===================== */
   P.ibf = function () {
-    var y = L.year(), I = L.ibf(y), pn = clear(root('ibf-partial')); L.partialNote(y, pn);
+    var y = L.year(), rk = clear(root('ibf-rank')), mode = rk._mode || 'ano', I = mode === 'acum' ? L.ibfa(y) : L.ibf(y), pn = clear(root('ibf-partial')); L.partialNote(y, pn);
     if (L.isPartial(y)) pn.appendChild(mk('span', null, ' O IBF desta edição é provisório e pode mudar.'));
-    var rk = clear(root('ibf-rank')), mx = Math.max.apply(null, I.map(function (r) { return r.hi; })) || 1, ul = mk('ol', 'ibf-list'); rk.appendChild(ul);
+    var ys0 = L.avail.filter(function (a) { return +a <= +y && L.ibf(a).length; }), multi = ys0.length > 1;
+    var ctl = mk('div', 'filters'); L.seg(ctl, 'IBF', [['ano', 'Da temporada ' + y], ['acum', 'Acumulado' + (multi ? ' (' + ys0[0] + ' a ' + y + ')' : '')]], mode, function (v) { rk._mode = v; P.ibf(); }); rk.appendChild(ctl);
+    if (mode === 'acum') rk.appendChild(mk('p', 'note', multi ? 'Junta todos os jogos de ' + ys0[0] + ' a ' + y + ' (' + ys0.length + ' temporadas disponíveis), cada jogo comparado com a média do mandante no mesmo ano. Mostra o impacto recorrente do clube. Clubes que só estiveram na Série A em parte das temporadas têm menos jogos e um intervalo maior.' : 'Só há uma temporada disponível até aqui, então o acumulado é igual ao da temporada. Ele passa a juntar os anos conforme as bases forem entrando.'));
+    var mx = Math.max.apply(null, I.map(function (r) { return r.hi; })) || 1, ul = mk('ol', 'ibf-list'); rk.appendChild(ul);
     var fcol = { Elite: COL.green, Alto: '#4FC79B', 'Médio': COL.gray, Baixo: '#D2484F' };
     var lst = mk('div', 'ibf-list'), MIN = 60, MAX = 180, pp = function (v) { return (v - MIN) / (MAX - MIN) * 100; }; rk.removeChild(ul); rk.appendChild(lst);
     I.forEach(function (r) {
@@ -103,15 +106,15 @@
       bar.style.left = Math.min(pp(r.ibf), pp(100)) + '%'; bar.style.width = Math.abs(pp(r.ibf) - pp(100)) + '%'; tr.appendChild(bar);
       var wk = mk('i', 'wsk'); wk.style.left = pp(r.lo) + '%'; wk.style.width = (pp(r.hi) - pp(r.lo)) + '%'; tr.appendChild(wk); row.appendChild(tr);
       row.appendChild(mk('b', 'v', F.d1(r.ibf))); var ch = mk('span', 'fx fx-' + r.faixa.toLowerCase().replace('é', 'e'), r.faixa); row.appendChild(ch);
-      row.title = L.nm(r.s) + ' · IBF ' + F.d1(r.ibf) + ' (intervalo ' + F.d1(r.lo) + ' a ' + F.d1(r.hi) + ') · posição entre ' + r.rl + 'º e ' + r.rh + 'º em 90% das simulações'; lst.appendChild(row);
+      row.title = (mode === 'acum' ? r.nt + (r.nt > 1 ? ' temporadas' : ' temporada') + ' · ' : '') + L.nm(r.s) + ' · IBF ' + F.d1(r.ibf) + ' (intervalo ' + F.d1(r.lo) + ' a ' + F.d1(r.hi) + ') · posição entre ' + r.rl + 'º e ' + r.rh + 'º em 90% das simulações'; lst.appendChild(row);
     });
     rk.appendChild(mk('p', 'note', 'Passe o mouse sobre uma linha para ver o intervalo de confiança. Faixas: Elite ≥ 120, Alto ≥ 105, Médio ≥ 95, Baixo < 95.'));
     /* ano a ano */
     var ah = clear(root('ibf-anos')), ys = L.avail.filter(function (a) { return L.ibf(a).length; }), by = {}; ys.forEach(function (a) { L.ibf(a).forEach(function (r) { (by[r.s] = by[r.s] || {})[a] = r; }); });
     var clubsK = sortBy(Object.keys(by), function (s) { return by[s][y] ? by[s][y].ibf : -1; });
-    ah.appendChild(L.tbl([['Clube']].concat(ys.map(function (a) { return [String(a) + (L.isPartial(a) ? '*' : ''), 1]; })).concat([['Variação', 1, 'Último ano menos o anterior, em pontos de IBF']]), clubsK.map(function (s) {
+    ah.appendChild(L.tbl([['Clube']].concat(ys.map(function (a) { return [String(a) + (L.isPartial(a) ? '*' : ''), 1]; })).concat([['Variação', 1, 'Último ano menos o anterior, em pontos de IBF'], ['Acumulado até ' + y, 1, 'IBF juntando todas as temporadas até o ano escolhido']]), clubsK.map(function (s) {
       var row = [{ node: L.clubCell(s) }], vs = []; ys.forEach(function (a) { var r = by[s][a]; row.push(r ? { t: F.d1(r.ibf), bg: L.div((r.ibf - 100) / 60), b: String(a) === String(y) } : '—'); vs.push(r ? r.ibf : null); });
-      var n = vs.length, d = n > 1 && vs[n - 1] != null && vs[n - 2] != null ? vs[n - 1] - vs[n - 2] : null; row.push(d == null ? '—' : { t: F.sgn(d, F.d1), c: d >= 0 ? '#15805a' : '#D2484F', b: 1 }); return row;
+      var n = vs.length, d = n > 1 && vs[n - 1] != null && vs[n - 2] != null ? vs[n - 1] - vs[n - 2] : null; row.push(d == null ? '—' : { t: F.sgn(d, F.d1), c: d >= 0 ? '#15805a' : '#D2484F', b: 1 }); var ac = L.ibfa(y).filter(function (x) { return x.s === s; })[0]; row.push(ac ? { t: F.d1(ac.ibf), bg: L.div((ac.ibf - 100) / 60), b: 1 } : '—'); return row;
     })));
     ah.appendChild(mk('p', 'note', '* temporada em andamento. O IBF é relativo à média de cada edição (100 = clube médio), então mostra posição relativa e não crescimento absoluto de público.'));
     var lh = clear(root('ibf-line')), ls = lh._s || (I[0] && I[0].s) || clubsK[0];
