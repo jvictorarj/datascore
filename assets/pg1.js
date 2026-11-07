@@ -69,7 +69,7 @@
         var ph = mk('div', 'plot'); c.appendChild(ph); g.appendChild(c);
         L.onResize(ph, function () { DSC.barChart(ph, labels, data.map(function (a) { return a ? M[1](a) : null; }), { fmt: M[2], hi: hi, partial: partial, h: 210, aria: M[0] + ' por temporada' }); });
       });
-      var rows = Y.anos.map(function (a, i) { var d = data[i], pd = i > 0 ? data[i - 1] : null; if (!d) return [String(a) + ' *', '—', '—', '—', '—', '—', '—']; var dl = pd ? { t: F.spct((d.renda / pd.renda - 1) * 100), c: d.renda >= pd.renda ? '#15805a' : '#D2484F', b: 1 } : '—'; return [String(a) + (L.isPartial(a) && mode === 'toda' ? ' (parcial)' : ''), F.int(d.j), F.pct(d.oc), F.brl(d.tk), F.int(d.pm), F.brlc(d.renda), dl]; });
+      var rows = Y.anos.map(function (a, i) { var d = data[i], pd = i > 0 ? data[i - 1] : null; if (!d) return [String(a), '—', '—', '—', '—', '—', '—']; var dl = pd ? { t: F.spct((d.renda / pd.renda - 1) * 100), c: d.renda >= pd.renda ? '#15805a' : '#D2484F', b: 1 } : '—'; return [String(a) + (L.isPartial(a) && mode === 'toda' ? ' (parcial)' : ''), F.int(d.j), F.pct(d.oc), F.brl(d.tk), F.int(d.pm), F.brlc(d.renda), dl]; });
       ah.appendChild(L.tbl([['Temporada'], ['Jogos', 1], ['Ocupação', 1], ['Ticket médio', 1], ['Público médio', 1], ['Renda total', 1], ['Renda vs ano anterior', 1]], rows));
       ah.appendChild(mk('p', 'note', 'Temporadas sem dados aparecem como "em breve" e entram aqui assim que as bases forem carregadas. Para comparar de forma justa uma temporada em andamento, use "Até a mesma rodada". A renda de anos diferentes está em valores da época (sem correção pela inflação).'));
     }
